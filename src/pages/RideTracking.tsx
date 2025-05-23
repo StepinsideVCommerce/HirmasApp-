@@ -1,29 +1,42 @@
 
-import React from 'react';
-import { MapPin, Clock, Car, PhoneCall, HelpCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MapPin, Clock, Car, PhoneCall, HelpCircle, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { motion } from 'framer-motion';
 import RouteAnimation from '@/components/RouteAnimation';
+import StepNavigation from '@/components/StepNavigation';
 
 const RideTracking = () => {
   const { bookingData } = useBookingFlow();
+  const [eta, setEta] = useState(5);
   
   const driverInfo = {
     name: "Michael Chen",
     vehicle: "Mercedes S-Class",
     plate: "VIP-001",
-    eta: "3 minutes",
+    rating: 4.9,
     phone: "+1 (555) 123-4567"
   };
+
+  useEffect(() => {
+    // Countdown ETA
+    const timer = setInterval(() => {
+      setEta((prev) => {
+        if (prev > 1) return prev - 1;
+        clearInterval(timer);
+        return prev;
+      });
+    }, 30000); // Every 30 seconds
+    
+    return () => clearInterval(timer);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
-      transition: { 
-        staggerChildren: 0.2
-      }
+      transition: { staggerChildren: 0.2 }
     }
   };
 
@@ -33,32 +46,24 @@ const RideTracking = () => {
   };
 
   return (
-    <div className="min-h-screen luxury-gradient">
+    <motion.div 
+      className="min-h-screen luxury-gradient"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <div className="px-6 py-8">
-        {/* Success Header */}
         <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ 
-            duration: 0.6, 
-            type: "spring",
-            stiffness: 200,
-            damping: 20 
-          }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
         >
-          <motion.div 
-            className="w-20 h-20 mx-auto bg-green-500 rounded-full flex items-center justify-center mb-4"
-            animate={{ 
-              boxShadow: ["0 0 0 rgba(34, 197, 94, 0)", "0 0 20px rgba(34, 197, 94, 0.7)", "0 0 0 rgba(34, 197, 94, 0)"]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Car className="w-10 h-10 text-white" />
-          </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">Ride Confirmed!</h1>
-          <p className="text-slate-400 text-lg">Your premium driver is on the way</p>
+          <h1 className="text-2xl font-bold text-white text-center">Your Ride</h1>
+          <p className="text-slate-400 text-center">Driver is on the way</p>
         </motion.div>
+        
+        <StepNavigation currentStep={4} maxStep={4} />
 
         <motion.div 
           className="max-w-md mx-auto space-y-6"
@@ -66,80 +71,89 @@ const RideTracking = () => {
           initial="hidden"
           animate="visible"
         >
-          {/* Driver Information */}
-          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6 space-y-4">
-            <h2 className="text-xl font-semibold text-white mb-4">Your Driver</h2>
-            
-            <div className="flex items-center space-x-4">
-              <motion.div 
-                className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center"
-                whileHover={{ scale: 1.1, rotate: 5 }}
-              >
-                <span className="text-2xl font-bold text-yellow-500">MC</span>
-              </motion.div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white">{driverInfo.name}</h3>
-                <p className="text-slate-400">{driverInfo.vehicle}</p>
-                <p className="text-slate-400">Plate: {driverInfo.plate}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* ETA */}
-          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Clock className="w-6 h-6 text-yellow-500" />
-                <span className="text-white font-medium">Arrival Time</span>
-              </div>
-              <motion.span 
-                className="text-yellow-500 font-bold text-xl"
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                {driverInfo.eta}
-              </motion.span>
-            </div>
-          </motion.div>
-
-          {/* Animated Route Map */}
-          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6">
-            <h3 className="text-white font-semibold mb-4 flex items-center">
-              <MapPin className="w-5 h-5 text-yellow-500 mr-2" />
-              Live Tracking
-            </h3>
+          {/* Map with Route */}
+          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6 mb-6 overflow-hidden">
             <RouteAnimation 
               startLocation={bookingData.pickupLocation || "Your Location"} 
               endLocation={bookingData.dropoffLocation || "Destination"} 
             />
+            
+            <div className="mt-4 flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <Clock className="w-5 h-5 text-yellow-500" />
+                <div>
+                  <p className="text-sm text-slate-400">Arrives in</p>
+                  <p className="text-xl font-bold text-white">{eta} min</p>
+                </div>
+              </div>
+              
+              <div>
+                <Button 
+                  className="bg-yellow-500 hover:bg-yellow-600 h-10 px-4 rounded-full text-black font-medium"
+                  onClick={() => window.location.reload()}
+                >
+                  Update ETA
+                </Button>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Contact Buttons */}
-          <motion.div variants={itemVariants} className="space-y-3">
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
+          {/* Driver Information */}
+          <motion.div variants={itemVariants} className="glass-effect rounded-xl overflow-hidden">
+            <div className="p-6 space-y-4">
+              <h2 className="text-xl font-semibold text-white">Your Driver</h2>
+              
+              <div className="flex items-center space-x-4">
+                <motion.div 
+                  className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                >
+                  <span className="text-2xl font-bold text-yellow-500">MC</span>
+                </motion.div>
+                <div className="flex-1">
+                  <div className="flex items-center">
+                    <h3 className="text-lg font-semibold text-white">{driverInfo.name}</h3>
+                    <div className="flex items-center ml-auto">
+                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                      <span className="text-white ml-1">{driverInfo.rating}</span>
+                    </div>
+                  </div>
+                  <p className="text-slate-400">{driverInfo.vehicle}</p>
+                  <p className="text-white text-sm bg-slate-700 px-2 py-0.5 rounded-md inline-block mt-1">{driverInfo.plate}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-px bg-slate-700 border-t border-slate-700">
               <Button 
-                className="w-full h-12 gold-gradient text-black font-semibold hover:opacity-90 transition-opacity"
+                variant="ghost"
+                className="bg-slate-800 text-white h-14 rounded-none"
                 onClick={() => window.open(`tel:${driverInfo.phone}`)}
               >
-                <PhoneCall className="w-4 h-4 mr-2" /> Contact Driver
+                <PhoneCall className="w-5 h-5 mr-2" />
+                Call Driver
               </Button>
-            </motion.div>
-            
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
               <Button 
-                variant="outline"
-                className="w-full h-12 border-slate-600 text-white hover:bg-slate-800"
-                onClick={() => window.open('tel:+1-555-SUPPORT')}
+                variant="ghost"
+                className="bg-slate-800 text-white h-14 rounded-none"
+                onClick={() => alert('Messaging feature coming soon')}
               >
-                <HelpCircle className="w-4 h-4 mr-2" /> Contact Support
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Message
               </Button>
-            </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Support Button */}
+          <motion.div variants={itemVariants}>
+            <Button 
+              variant="outline"
+              className="w-full h-12 border-slate-600 text-white hover:bg-slate-800"
+              onClick={() => window.open('tel:+1-555-SUPPORT')}
+            >
+              <HelpCircle className="w-4 h-4 mr-2" /> Contact Support
+            </Button>
           </motion.div>
 
           {/* Ride Status */}
@@ -150,7 +164,7 @@ const RideTracking = () => {
           </motion.div>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

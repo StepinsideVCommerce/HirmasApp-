@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, Users, Car } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, User, Car, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { motion } from 'framer-motion';
+import StepNavigation from '@/components/StepNavigation';
 
 const ReviewConfirm = () => {
   const navigate = useNavigate();
@@ -45,7 +46,6 @@ const ReviewConfirm = () => {
     visible: { 
       opacity: 1,
       transition: { 
-        when: "beforeChildren",
         staggerChildren: 0.1
       }
     }
@@ -60,15 +60,30 @@ const ReviewConfirm = () => {
     }
   };
 
+  const getVehicleName = (id: string) => {
+    const vehicles = {
+      'luxury-sedan': 'Luxury Sedan',
+      'suv': 'Premium SUV',
+      'minibus': 'Executive Minibus',
+      'other': 'Custom Request'
+    };
+    return vehicles[id as keyof typeof vehicles] || id;
+  };
+
   return (
-    <div className="min-h-screen luxury-gradient">
-      <motion.div 
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="px-6 py-8"
-      >
-        <motion.div variants={itemVariants} className="flex items-center mb-6">
+    <motion.div 
+      className="min-h-screen luxury-gradient"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <div className="px-6 py-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center mb-6"
+        >
           <Button
             variant="ghost"
             onClick={() => navigate('/vehicles')}
@@ -78,150 +93,140 @@ const ReviewConfirm = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-white">Review & Confirm</h1>
-            <p className="text-slate-400">Please verify your ride details</p>
+            <p className="text-slate-400">Verify your ride details</p>
           </div>
         </motion.div>
 
-        <div className="max-w-md mx-auto space-y-6">
+        <StepNavigation currentStep={3} maxStep={3} />
+
+        <motion.div 
+          className="max-w-md mx-auto space-y-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* Vehicle Summary */}
+          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <Car className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-xl font-semibold text-white">Selected Vehicle</h2>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center">
+                <Car className="w-8 h-8 text-yellow-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  {getVehicleName(bookingData.carType || '')}
+                </h3>
+                <p className="text-slate-400 text-sm">Premium transportation service</p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Trip Summary */}
           <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6 space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center space-x-3 mb-2">
               <MapPin className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">Trip Summary</h2>
+              <h2 className="text-xl font-semibold text-white">Trip Details</h2>
             </div>
             
             <div className="space-y-4">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <p className="text-slate-400 text-sm">Pick-up Location</p>
-                <p className="text-white font-medium">{bookingData.pickupLocation || 'Not specified'}</p>
-              </motion.div>
+              <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 flex">
+                <div className="mr-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-green-500" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Pickup Location</p>
+                  <p className="text-white">{bookingData.pickupLocation}</p>
+                </div>
+              </div>
               
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <p className="text-slate-400 text-sm">Drop-off Location</p>
-                <p className="text-white font-medium">{bookingData.dropoffLocation || 'Not specified'}</p>
-              </motion.div>
+              <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 flex">
+                <div className="mr-3">
+                  <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-red-500" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Dropoff Location</p>
+                  <p className="text-white">{bookingData.dropoffLocation || 'Not specified'}</p>
+                </div>
+              </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <p className="text-slate-400 text-sm">Date</p>
-                  <p className="text-white font-medium">{bookingData.pickupDate || 'Today'}</p>
-                </motion.div>
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <p className="text-slate-400 text-sm">Time</p>
-                  <p className="text-white font-medium">{bookingData.pickupTime || 'ASAP'}</p>
-                </motion.div>
+              <div className="flex space-x-4">
+                <div className="flex-1 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <p className="text-xs text-slate-400">Date</p>
+                  </div>
+                  <p className="text-white">{bookingData.pickupDate || 'Today'}</p>
+                </div>
+                
+                <div className="flex-1 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Clock className="w-4 h-4 text-yellow-500" />
+                    <p className="text-xs text-slate-400">Time</p>
+                  </div>
+                  <p className="text-white">{bookingData.pickupTime || 'ASAP'}</p>
+                </div>
               </div>
             </div>
           </motion.div>
 
           {/* Guest Details */}
           <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6 space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Users className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">Guest Details</h2>
+            <div className="flex items-center space-x-3 mb-2">
+              <User className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-xl font-semibold text-white">Guest Information</h2>
             </div>
             
             <div className="space-y-4">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <p className="text-slate-400 text-sm">Guest Name</p>
-                <p className="text-white font-medium">{bookingData.guestName}</p>
-              </motion.div>
+              <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                <p className="text-xs text-slate-400">Guest Name</p>
+                <p className="text-white">{bookingData.guestName || 'Not provided'}</p>
+              </div>
               
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <p className="text-slate-400 text-sm">Phone Number</p>
-                <p className="text-white font-medium">{bookingData.phoneNumber}</p>
-              </motion.div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <p className="text-slate-400 text-sm">Category</p>
-                  <p className="text-white font-medium">{bookingData.guestCategory || 'Standard'}</p>
-                </motion.div>
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <p className="text-slate-400 text-sm">Service Type</p>
-                  <p className="text-white font-medium">{bookingData.serviceType}</p>
-                </motion.div>
+              <div className="flex space-x-4">
+                <div className="flex-1 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                  <p className="text-xs text-slate-400">Phone</p>
+                  <p className="text-white">{bookingData.phoneNumber || 'Not provided'}</p>
+                </div>
+                
+                <div className="flex-1 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                  <p className="text-xs text-slate-400">Service</p>
+                  <p className="text-white">{bookingData.serviceType}</p>
+                </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Vehicle Details */}
-          <motion.div variants={itemVariants} className="glass-effect rounded-xl p-6 space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Car className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">Selected Vehicle</h2>
-            </div>
-            
-            <div>
-              <motion.p 
-                className="text-white font-medium text-lg"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                {bookingData.carType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not selected'}
-              </motion.p>
-              <p className="text-slate-400">Premium transportation service</p>
-            </div>
-          </motion.div>
-
           {/* Confirm Button */}
-          <motion.div 
-            variants={itemVariants}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
+          <motion.div variants={itemVariants}>
             <Button 
               onClick={handleConfirm}
               disabled={isSubmitting}
               className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity relative overflow-hidden"
             >
               {isSubmitting ? (
-                <motion.span
+                <motion.div 
+                  className="flex items-center"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   Processing...
-                </motion.span>
+                </motion.div>
               ) : (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  Confirm Ride Request
-                </motion.span>
+                <>
+                  <CheckCircle className="w-5 h-5 mr-2" /> Confirm Booking
+                </>
               )}
               
               {isSubmitting && (
@@ -234,9 +239,9 @@ const ReviewConfirm = () => {
               )}
             </Button>
           </motion.div>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
