@@ -3,8 +3,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import VehicleCard from '@/components/VehicleCard';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
+import { motion } from 'framer-motion';
+import VehicleCarousel from '@/components/VehicleCarousel';
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
@@ -57,9 +58,13 @@ const VehicleSelection = () => {
 
   return (
     <div className="min-h-screen luxury-gradient">
-      {/* Header */}
-      <div className="px-6 py-8">
-        <div className="flex items-center mb-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="px-6 py-8"
+      >
+        <div className="flex items-center mb-8">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
@@ -73,36 +78,27 @@ const VehicleSelection = () => {
           </div>
         </div>
 
-        {/* Vehicle Grid */}
-        <div className="max-w-md mx-auto space-y-4">
-          <div className="glass-effect rounded-xl p-6">
+        <div className="max-w-md mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="glass-effect rounded-xl p-6 mb-6"
+          >
             <div className="flex items-center space-x-3 mb-6">
               <Car className="w-6 h-6 text-yellow-500" />
               <h2 className="text-xl font-semibold text-white">Available Vehicles</h2>
             </div>
             
-            <div className="space-y-4">
-              {vehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  {...vehicle}
-                  isSelected={selectedVehicle === vehicle.id}
-                  onClick={() => setSelectedVehicle(vehicle.id)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Continue Button */}
-          <Button 
-            onClick={handleContinue}
-            disabled={!selectedVehicle}
-            className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            Continue to Review
-          </Button>
+            <VehicleCarousel 
+              vehicles={vehicles}
+              selectedVehicle={selectedVehicle}
+              onSelectVehicle={setSelectedVehicle}
+              onContinue={handleContinue}
+            />
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
