@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation } from 'lucide-react';
+import { MapPin, Navigation, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface EnhancedMapViewProps {
