@@ -1,53 +1,79 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useBookingFlow } from '@/hooks/useBookingFlow';
-import DriverSearchAnimation from '@/components/DriverSearchAnimation';
-import StepNavigation from '@/components/StepNavigation';
+import { Car, Clock } from 'lucide-react';
 
 const DriverSearch = () => {
   const navigate = useNavigate();
-  const { bookingData } = useBookingFlow();
-  
-  useEffect(() => {
-    // If no booking data, redirect to home
-    if (!bookingData.pickupLocation) {
-      navigate('/');
-    }
-  }, [bookingData, navigate]);
+  const [searchStage, setSearchStage] = useState(0);
 
-  const handleDriverFound = () => {
-    setTimeout(() => {
-      navigate('/tracking');
-    }, 1500);
-  };
+  useEffect(() => {
+    const stages = [
+      "Looking for your driver...",
+      "Found nearby drivers...",
+      "Confirming availability...",
+      "Driver confirmed!"
+    ];
+
+    const interval = setInterval(() => {
+      setSearchStage(prev => {
+        if (prev < stages.length - 1) {
+          return prev + 1;
+        } else {
+          setTimeout(() => navigate('/tracking'), 1000);
+          return prev;
+        }
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  const stages = [
+    "Looking for your driver...",
+    "Found nearby drivers...",
+    "Confirming availability...",
+    "Driver confirmed!"
+  ];
 
   return (
-    <motion.div 
-      className="min-h-screen luxury-gradient"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <div className="px-6 py-8">
-        <motion.div 
-          className="text-center mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-2xl font-bold text-white">Finding Your Driver</h1>
-          <p className="text-slate-400">Just a moment while we match you with the best driver</p>
-        </motion.div>
+    <div className="min-h-screen luxury-gradient flex items-center justify-center">
+      <div className="text-center space-y-8 px-6">
+        {/* Animated Car Icon */}
+        <div className="relative">
+          <div className="w-24 h-24 mx-auto bg-yellow-500 rounded-full flex items-center justify-center animate-pulse">
+            <Car className="w-12 h-12 text-black" />
+          </div>
+          <div className="absolute inset-0 w-24 h-24 mx-auto border-4 border-yellow-500/30 rounded-full animate-spin" style={{ animationDuration: '3s' }}></div>
+        </div>
 
-        <StepNavigation currentStep={4} maxStep={4} />
+        {/* Status Text */}
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold text-white">{stages[searchStage]}</h1>
+          <p className="text-slate-400 text-lg">Please wait while we arrange your premium ride</p>
+        </div>
 
-        <div className="max-w-md mx-auto h-[70vh] flex items-center justify-center">
-          <DriverSearchAnimation onDriverFound={handleDriverFound} />
+        {/* Progress Dots */}
+        <div className="flex justify-center space-x-2">
+          {stages.map((_, index) => (
+            <div
+              key={index}
+              className={`w-3 h-3 rounded-full transition-colors duration-500 ${
+                index <= searchStage ? 'bg-yellow-500' : 'bg-slate-700'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* ETA */}
+        <div className="glass-effect rounded-xl p-6 max-w-sm mx-auto">
+          <div className="flex items-center justify-center space-x-3">
+            <Clock className="w-5 h-5 text-yellow-500" />
+            <span className="text-white">Estimated arrival: 3-5 minutes</span>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
