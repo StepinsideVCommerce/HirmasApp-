@@ -45,7 +45,6 @@ const Index = () => {
               value={bookingData.pickupLocation}
               onChange={(value) => updateBookingData({ pickupLocation: value })}
               placeholder="Current location"
-              className="pl-12 h-14 bg-slate-800 border-none rounded-xl"
             />
           </div>
           
@@ -58,7 +57,6 @@ const Index = () => {
               value={bookingData.dropoffLocation}
               onChange={(value) => updateBookingData({ dropoffLocation: value })}
               placeholder="Where to?"
-              className="pl-12 h-14 bg-slate-800 border-none rounded-xl"
             />
           </div>
         </div>

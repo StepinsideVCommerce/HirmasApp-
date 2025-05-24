@@ -12,6 +12,7 @@ export interface BookingData {
   useGPS: boolean;
   pickupDate: string;
   pickupTime: string;
+  passengerCount: number;
 }
 
 export const useBookingFlow = () => {
@@ -20,12 +21,13 @@ export const useBookingFlow = () => {
     dropoffLocation: '',
     guestName: '',
     phoneNumber: '',
-    guestCategory: '',
+    guestCategory: 'other',
     carType: '',
     serviceType: 'Single Trip',
     useGPS: false,
     pickupDate: '',
     pickupTime: '',
+    passengerCount: 1,
   });
 
   const updateBookingData = (updates: Partial<BookingData>) => {

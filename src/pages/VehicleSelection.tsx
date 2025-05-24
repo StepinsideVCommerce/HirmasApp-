@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
+import { useToast } from '@/hooks/use-toast';
 import {
   Carousel,
   CarouselContent,
@@ -11,11 +12,13 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import PassengerDetailsSection from '@/components/PassengerDetailsSection';
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
   const { bookingData, updateBookingData } = useBookingFlow();
   const [selectedVehicle, setSelectedVehicle] = useState('');
+  const { toast } = useToast();
 
   const vehicles = [
     {
@@ -54,9 +57,24 @@ const VehicleSelection = () => {
 
   const handleContinue = () => {
     if (!selectedVehicle) {
-      alert('Please select a vehicle');
+      toast({
+        title: "Selection Required",
+        description: "Please select a vehicle",
+        variant: "destructive"
+      });
       return;
     }
+    
+    // Basic validation for passenger details if needed
+    if (selectedVehicle !== 'other' && (!bookingData.guestName || !bookingData.phoneNumber)) {
+      toast({
+        title: "Missing Information",
+        description: "Please complete passenger details before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     updateBookingData({ carType: selectedVehicle });
     navigate('/review');
   };
@@ -96,7 +114,7 @@ const VehicleSelection = () => {
       </div>
 
       {/* Bottom Sheet */}
-      <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-10 px-4 pt-6">
+      <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-10 px-4 pt-6 overflow-y-auto pb-6">
         <div className="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full"></div>
         
         <h1 className="text-2xl font-bold text-white mb-4">Choose your ride</h1>
@@ -148,6 +166,12 @@ const VehicleSelection = () => {
           <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white hover:bg-slate-700 border-none" />
         </Carousel>
 
+        {/* Passenger Details Section */}
+        <PassengerDetailsSection 
+          bookingData={bookingData} 
+          updateBookingData={updateBookingData} 
+        />
+
         {/* Ride Options Summary */}
         <div className="bg-slate-800 rounded-xl p-4 mb-6">
           <h3 className="text-white font-semibold mb-2">Trip Details</h3>
@@ -157,7 +181,7 @@ const VehicleSelection = () => {
               <Users className="w-4 h-4 text-yellow-500 mr-2" />
               <span className="text-slate-300">Passengers</span>
             </div>
-            <span className="text-white">1-4</span>
+            <span className="text-white">{bookingData.passengerCount || 1}</span>
           </div>
           
           <div className="flex items-center justify-between">
