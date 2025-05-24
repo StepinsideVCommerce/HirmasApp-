@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Users, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { useToast } from '@/hooks/use-toast';
+import LocationPicker from '@/components/LocationPicker';
 import {
   Carousel,
   CarouselContent,
@@ -85,24 +86,33 @@ const VehicleSelection = () => {
       <div className="relative w-full h-1/3 bg-slate-800">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900"></div>
         
-        {/* Pickup/Dropoff Summary */}
-        <div className="absolute bottom-8 left-0 right-0 px-4">
+        {/* Pickup/Dropoff Summary - Ensuring the inputs are clickable */}
+        <div className="absolute bottom-8 left-0 right-0 px-4 z-10">
           <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-4">
-            <div className="flex items-center mb-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-              <p className="text-white truncate">{bookingData.pickupLocation || 'Current Location'}</p>
+            {/* Location pickers with proper z-index and pointer-events */}
+            <div className="mb-3 relative z-20 pointer-events-auto">
+              <LocationPicker
+                label="From"
+                value={bookingData.pickupLocation}
+                onChange={(value) => updateBookingData({ pickupLocation: value })}
+                placeholder="Current location"
+              />
             </div>
             <div className="w-0.5 h-3 bg-slate-600 ml-1"></div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white border border-yellow-500 rounded-full mr-2"></div>
-              <p className="text-white truncate">{bookingData.dropoffLocation || 'Destination'}</p>
+            <div className="relative z-20 pointer-events-auto">
+              <LocationPicker
+                label="To"
+                value={bookingData.dropoffLocation}
+                onChange={(value) => updateBookingData({ dropoffLocation: value })}
+                placeholder="Where to?"
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 px-4 py-6">
+      <div className="absolute top-0 left-0 right-0 px-4 py-6 z-20">
         <Button
           variant="ghost"
           size="icon"
