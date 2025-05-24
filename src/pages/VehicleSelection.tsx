@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Users, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,16 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import PassengerDetailsSection from '@/components/PassengerDetailsSection';
+import VehicleCard from '@/components/VehicleCard';
+import MapComponent from '@/components/MapComponent';
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
   const { bookingData, updateBookingData } = useBookingFlow();
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const { toast } = useToast();
-
+  const [mapExpanded, setMapExpanded] = useState(true);
+  
   const vehicles = [
     {
       id: 'luxury-sedan',
@@ -28,7 +31,6 @@ const VehicleSelection = () => {
       description: 'Mercedes S-Class or equivalent',
       image: '',
       eta: '3-5 min',
-      price: '$45'
     },
     {
       id: 'suv',
@@ -36,7 +38,6 @@ const VehicleSelection = () => {
       description: 'BMW X7 or equivalent',
       image: '',
       eta: '5-8 min',
-      price: '$65'
     },
     {
       id: 'minibus',
@@ -44,7 +45,6 @@ const VehicleSelection = () => {
       description: 'Mercedes Sprinter - Up to 12 passengers',
       image: '',
       eta: '8-12 min',
-      price: '$85'
     },
     {
       id: 'other',
@@ -52,7 +52,6 @@ const VehicleSelection = () => {
       description: 'Special vehicle requirements',
       image: '',
       eta: 'On request',
-      price: 'Quote'
     }
   ];
 
@@ -80,14 +79,24 @@ const VehicleSelection = () => {
     navigate('/review');
   };
 
+  const toggleMapSize = () => {
+    setMapExpanded(!mapExpanded);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-slate-900">
-      {/* Map Background (Simulated) */}
-      <div className="relative w-full h-1/3 bg-slate-800">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900"></div>
+      {/* Map */}
+      <div className={`relative w-full transition-all duration-300 ${mapExpanded ? 'h-2/3' : 'h-1/3'} bg-slate-800`}>
+        <div className="absolute inset-0 z-0">
+          <MapComponent 
+            pickupLocation={bookingData.pickupLocation}
+            dropoffLocation={bookingData.dropoffLocation}
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900 z-10"></div>
         
         {/* Pickup/Dropoff Summary - Ensuring the inputs are clickable */}
-        <div className="absolute bottom-8 left-0 right-0 px-4 z-10">
+        <div className="absolute bottom-8 left-0 right-0 px-4 z-20">
           <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-4">
             {/* Location pickers with proper z-index and pointer-events */}
             <div className="mb-3 relative z-20 pointer-events-auto">
@@ -112,19 +121,30 @@ const VehicleSelection = () => {
       </div>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 px-4 py-6 z-20">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/')}
-          className="bg-slate-800/50 backdrop-blur-sm text-white hover:bg-slate-700/50"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+      <div className="absolute top-0 left-0 right-0 px-4 py-6 z-30">
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="bg-slate-800/50 backdrop-blur-sm text-white hover:bg-slate-700/50"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMapSize}
+            className="bg-slate-800/50 backdrop-blur-sm text-white hover:bg-slate-700/50 px-3"
+          >
+            {mapExpanded ? 'Hide Map' : 'Show Map'}
+          </Button>
+        </div>
       </div>
 
       {/* Bottom Sheet */}
-      <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-10 px-4 pt-6 overflow-y-auto pb-6">
+      <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-20 px-4 pt-6 overflow-y-auto pb-6">
         <div className="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full"></div>
         
         <h1 className="text-2xl font-bold text-white mb-4">Choose your ride</h1>
@@ -150,12 +170,11 @@ const VehicleSelection = () => {
                       <h3 className="text-xl font-semibold text-white">{vehicle.name}</h3>
                       <p className="text-slate-400">{vehicle.description}</p>
                       
-                      <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center mt-3">
                         <div className="flex items-center text-slate-400">
                           <Clock className="w-4 h-4 mr-1" />
                           <span>{vehicle.eta}</span>
                         </div>
-                        <span className="text-yellow-500 font-semibold text-lg">{vehicle.price}</span>
                       </div>
                     </div>
                   </div>

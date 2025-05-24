@@ -8,7 +8,6 @@ interface VehicleCardProps {
   description: string;
   image: string;
   eta: string;
-  price: string;
   isSelected: boolean;
   onClick: () => void;
 }
@@ -18,7 +17,6 @@ const VehicleCard: React.FC<VehicleCardProps> = ({
   description,
   image,
   eta,
-  price,
   isSelected,
   onClick
 }) => {
@@ -38,12 +36,11 @@ const VehicleCard: React.FC<VehicleCardProps> = ({
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-white">{name}</h3>
           <p className="text-slate-400 text-sm">{description}</p>
-          <div className="flex items-center mt-2 space-x-4">
+          <div className="flex items-center mt-2">
             <div className="flex items-center text-slate-400">
               <Clock className="w-4 h-4 mr-1" />
               <span className="text-sm">{eta}</span>
             </div>
-            <span className="text-yellow-500 font-semibold">{price}</span>
           </div>
         </div>
       </div>
