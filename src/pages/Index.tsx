@@ -1,162 +1,100 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Car, Users } from 'lucide-react';
+import { MapPin, Clock, Users, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import LocationPicker from '@/components/LocationPicker';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
+import LocationPicker from '@/components/LocationPicker';
 
 const Index = () => {
   const navigate = useNavigate();
   const { bookingData, updateBookingData } = useBookingFlow();
   
   const handleContinue = () => {
-    if (!bookingData.guestName || !bookingData.phoneNumber || !bookingData.pickupLocation) {
-      alert('Please fill in all required fields');
+    if (!bookingData.pickupLocation) {
+      alert('Please enter your pickup location');
       return;
     }
     navigate('/vehicles');
   };
 
   return (
-    <div className="min-h-screen luxury-gradient">
-      {/* Header */}
-      <div className="px-6 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">VIP Ride Service</h1>
-          <p className="text-slate-400 text-lg">Premium transportation for distinguished guests</p>
-        </div>
+    <div className="flex flex-col h-screen bg-slate-900">
+      {/* Map Background (Simulated) */}
+      <div className="relative w-full h-1/2 bg-slate-800 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-800/50 to-slate-900"></div>
+        <MapPin className="w-16 h-16 text-yellow-500 animate-bounce" />
+      </div>
 
-        {/* Main Form */}
-        <div className="max-w-md mx-auto space-y-6">
-          {/* Location Section */}
-          <div className="glass-effect rounded-xl p-6 space-y-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <MapPin className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">Trip Details</h2>
+      {/* Bottom Sheet */}
+      <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-10 px-4 pt-6">
+        <div className="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full"></div>
+        
+        <h1 className="text-2xl font-bold text-white mb-6">Where to?</h1>
+
+        {/* Location Inputs */}
+        <div className="relative mb-6">
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
+          
+          <div className="relative z-10 mb-4">
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
+              <div className="w-2 h-2 bg-black rounded-full"></div>
             </div>
-            
             <LocationPicker
-              label="Pick-up Location"
+              label=""
               value={bookingData.pickupLocation}
               onChange={(value) => updateBookingData({ pickupLocation: value })}
-              placeholder="Enter pick-up address"
+              placeholder="Current location"
+              className="pl-12 h-14 bg-slate-800 border-none rounded-xl"
             />
-
+          </div>
+          
+          <div className="relative z-10">
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 border-yellow-500 flex items-center justify-center">
+              <MapPin className="w-3 h-3 text-yellow-500" />
+            </div>
             <LocationPicker
-              label="Drop-off Location"
+              label=""
               value={bookingData.dropoffLocation}
               onChange={(value) => updateBookingData({ dropoffLocation: value })}
-              placeholder="Enter destination"
+              placeholder="Where to?"
+              className="pl-12 h-14 bg-slate-800 border-none rounded-xl"
             />
-
-            <div className="flex items-center space-x-3">
-              <Checkbox 
-                id="gps"
-                checked={bookingData.useGPS}
-                onCheckedChange={(checked) => updateBookingData({ useGPS: checked as boolean })}
-              />
-              <Label htmlFor="gps" className="text-white">Use current location (GPS)</Label>
-            </div>
           </div>
-
-          {/* Date & Time */}
-          <div className="glass-effect rounded-xl p-6 space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Clock className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">When</h2>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-white">Date</Label>
-                <Input
-                  type="date"
-                  value={bookingData.pickupDate}
-                  onChange={(e) => updateBookingData({ pickupDate: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white h-12"
-                />
-              </div>
-              <div>
-                <Label className="text-white">Time</Label>
-                <Input
-                  type="time"
-                  value={bookingData.pickupTime}
-                  onChange={(e) => updateBookingData({ pickupTime: e.target.value })}
-                  className="bg-slate-800 border-slate-700 text-white h-12"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Guest Information */}
-          <div className="glass-effect rounded-xl p-6 space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Users className="w-6 h-6 text-yellow-500" />
-              <h2 className="text-xl font-semibold text-white">Guest Information</h2>
-            </div>
-            
-            <div>
-              <Label className="text-white">Guest Name *</Label>
-              <Input
-                value={bookingData.guestName}
-                onChange={(e) => updateBookingData({ guestName: e.target.value })}
-                placeholder="Enter guest name"
-                className="bg-slate-800 border-slate-700 text-white h-12"
-              />
-            </div>
-
-            <div>
-              <Label className="text-white">Phone Number *</Label>
-              <Input
-                value={bookingData.phoneNumber}
-                onChange={(e) => updateBookingData({ phoneNumber: e.target.value })}
-                placeholder="Enter phone number"
-                className="bg-slate-800 border-slate-700 text-white h-12"
-              />
-            </div>
-
-            <div>
-              <Label className="text-white">Guest Category</Label>
-              <Select onValueChange={(value) => updateBookingData({ guestCategory: value })}>
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white h-12">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="speaker">Speaker</SelectItem>
-                  <SelectItem value="sponsor">Sponsor</SelectItem>
-                  <SelectItem value="vvip">VVIP</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="text-white">Service Type</Label>
-              <Select onValueChange={(value) => updateBookingData({ serviceType: value })} defaultValue="Single Trip">
-                <SelectTrigger className="bg-slate-800 border-slate-700 text-white h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="Single Trip">Single Trip</SelectItem>
-                  <SelectItem value="Round Trip">Round Trip</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Continue Button */}
-          <Button 
-            onClick={handleContinue}
-            className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity"
-          >
-            Select Vehicle
-          </Button>
         </div>
+
+        {/* Quick Actions */}
+        <div className="space-y-4 mb-6">
+          <div onClick={() => navigate('/vehicles')} className="flex items-center bg-slate-800 p-4 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mr-3">
+              <Clock className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-medium">Book for later</h3>
+              <p className="text-slate-400 text-sm">Schedule a ride</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </div>
+          
+          <div onClick={() => navigate('/vehicles')} className="flex items-center bg-slate-800 p-4 rounded-xl cursor-pointer hover:bg-slate-700 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center mr-3">
+              <Users className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-medium">Guest booking</h3>
+              <p className="text-slate-400 text-sm">Book for someone else</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </div>
+        </div>
+
+        {/* Continue Button */}
+        <Button 
+          onClick={handleContinue}
+          className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity mb-6"
+        >
+          Find a ride
+        </Button>
       </div>
     </div>
   );
