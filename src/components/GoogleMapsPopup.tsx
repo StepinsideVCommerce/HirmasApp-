@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -35,6 +36,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [isGoogleMapsReady, setIsGoogleMapsReady] = useState(false);
 
   // Get API key from Supabase secrets
   useEffect(() => {
@@ -56,7 +58,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
 
   // Get user's current location
   useEffect(() => {
-    if (isOpen && navigator.geolocation && isScriptLoaded) {
+    if (isOpen && navigator.geolocation && isScriptLoaded && isGoogleMapsReady) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
@@ -86,18 +88,20 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
         }
       );
     }
-  }, [isOpen, geocoder, isScriptLoaded]);
+  }, [isOpen, geocoder, isScriptLoaded, isGoogleMapsReady]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
     // Only create geocoder when script is loaded and google is available
     if (window.google && window.google.maps) {
       setGeocoder(new window.google.maps.Geocoder());
+      setIsGoogleMapsReady(true);
     }
   }, []);
 
   const onUnmount = useCallback(() => {
     setMap(null);
+    setIsGoogleMapsReady(false);
   }, []);
 
   const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
@@ -169,6 +173,24 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
   const handleScriptLoad = () => {
     setIsScriptLoaded(true);
   };
+
+  // Create custom marker icon safely after Google Maps is ready
+  const createCustomMarkerIcon = useCallback(() => {
+    if (!window.google?.maps?.Size) {
+      console.warn("Google Maps API not loaded yet");
+      return undefined;
+    }
+
+    return {
+      url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2C10.4772 2 6 6.47715 6 12C6 20 16 30 16 30C16 30 26 20 26 12C26 6.47715 21.5228 2 16 2Z" fill="#FFD700" stroke="#000" stroke-width="2"/>
+          <circle cx="16" cy="12" r="4" fill="#000"/>
+        </svg>
+      `),
+      scaledSize: new window.google.maps.Size(32, 32),
+    };
+  }, []);
 
   if (!apiKey) {
     return (
@@ -253,18 +275,10 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
                   ]
                 }}
               >
-                {selectedPosition && isScriptLoaded && (
+                {selectedPosition && isGoogleMapsReady && (
                   <Marker
                     position={selectedPosition}
-                    icon={{
-                      url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M16 2C10.4772 2 6 6.47715 6 12C6 20 16 30 16 30C16 30 26 20 26 12C26 6.47715 21.5228 2 16 2Z" fill="#FFD700" stroke="#000" stroke-width="2"/>
-                          <circle cx="16" cy="12" r="4" fill="#000"/>
-                        </svg>
-                      `),
-                      scaledSize: isScriptLoaded && window.google ? new window.google.maps.Size(32, 32) : undefined,
-                    }}
+                    icon={createCustomMarkerIcon()}
                   />
                 )}
               </GoogleMap>
