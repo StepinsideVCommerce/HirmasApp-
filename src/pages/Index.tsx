@@ -24,7 +24,7 @@ const Index = () => {
               <Star className="w-12 h-12 text-black" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Premium<span className="text-yellow-500"> Rides</span>
+              Vip<span className="text-yellow-500"> Rides</span>
             </h1>
             <p className="text-xl text-slate-300 max-w-md mx-auto">
               Experience luxury transportation with our premium fleet
