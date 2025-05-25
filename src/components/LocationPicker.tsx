@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import GoogleMapsPopup from './GoogleMapsPopup';
+import { useGoogleMapsApi } from '@/hooks/useGoogleMapsApi';
 
 interface LocationPickerProps {
   label: string;
@@ -12,32 +13,159 @@ interface LocationPickerProps {
   placeholder: string;
 }
 
+interface Prediction {
+  place_id: string;
+  description: string;
+  structured_formatting: {
+    main_text: string;
+    secondary_text: string;
+  };
+}
+
 const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange, placeholder }) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const { isLoaded } = useGoogleMapsApi();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize the autocomplete service when Google Maps is loaded
+  useEffect(() => {
+    if (isLoaded && window.google?.maps?.places?.AutocompleteService) {
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    }
+  }, [isLoaded]);
+
+  const handleInputChange = (inputValue: string) => {
+    onChange(inputValue);
+    
+    if (!autocompleteService.current || !inputValue.trim()) {
+      setPredictions([]);
+      setShowPredictions(false);
+      return;
+    }
+
+    setIsLoading(true);
+    
+    autocompleteService.current.getPlacePredictions(
+      {
+        input: inputValue,
+        types: ['establishment', 'geocode'],
+      },
+      (predictions, status) => {
+        setIsLoading(false);
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setPredictions(predictions);
+          setShowPredictions(true);
+        } else {
+          setPredictions([]);
+          setShowPredictions(false);
+        }
+      }
+    );
+  };
+
+  const handlePredictionSelect = (prediction: Prediction) => {
+    onChange(prediction.description);
+    setPredictions([]);
+    setShowPredictions(false);
+    inputRef.current?.blur();
+  };
 
   const handleLocationSelect = (address: string, lat: number, lng: number) => {
     onChange(address);
     console.log('Selected location:', { address, lat, lng });
   };
 
+  const clearInput = () => {
+    onChange('');
+    setPredictions([]);
+    setShowPredictions(false);
+    inputRef.current?.focus();
+  };
+
+  const handleInputFocus = () => {
+    if (predictions.length > 0) {
+      setShowPredictions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding predictions to allow for click events
+    setTimeout(() => {
+      setShowPredictions(false);
+    }, 200);
+  };
+
   return (
     <div className="space-y-3">
       <label className="text-white font-medium">{label}</label>
       <div className="relative">
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="bg-slate-800 border-slate-700 text-white pl-12 h-14 text-lg"
-        />
-        <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 w-5 h-5" />
-        <Button
-          type="button"
-          onClick={() => setIsMapOpen(true)}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 gold-gradient text-black font-semibold hover:opacity-90 transition-opacity"
-        >
-          Map
-        </Button>
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            value={value}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            placeholder={placeholder}
+            className="bg-slate-800 border-slate-700 text-white pl-12 pr-20 h-14 text-lg"
+          />
+          <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 w-5 h-5" />
+          
+          {value && (
+            <Button
+              type="button"
+              onClick={clearInput}
+              variant="ghost"
+              size="sm"
+              className="absolute right-14 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+          
+          <Button
+            type="button"
+            onClick={() => setIsMapOpen(true)}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 gold-gradient text-black font-semibold hover:opacity-90 transition-opacity"
+          >
+            Map
+          </Button>
+        </div>
+
+        {/* Autocomplete Predictions Dropdown */}
+        {showPredictions && (predictions.length > 0 || isLoading) && (
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+            {isLoading && (
+              <div className="p-4 text-gray-500 text-center">
+                Searching...
+              </div>
+            )}
+            
+            {predictions.map((prediction) => (
+              <div
+                key={prediction.place_id}
+                onClick={() => handlePredictionSelect(prediction)}
+                className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+              >
+                <div className="flex items-start space-x-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate">
+                      {prediction.structured_formatting.main_text}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">
+                      {prediction.structured_formatting.secondary_text}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       <GoogleMapsPopup
