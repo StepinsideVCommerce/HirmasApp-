@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { X, MapPin, Navigation } from 'lucide-react';
+import { X, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGoogleMapsApi } from '@/hooks/useGoogleMapsApi';
 
@@ -33,6 +33,13 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       const mapInstance = new google.maps.Map(mapRef.current, {
         zoom: 13,
         center: { lat: 40.7589, lng: -73.9851 }, // Default to NYC
+        disableDefaultUI: true, // Remove all default controls
+        zoomControl: false,
+        mapTypeControl: false,
+        scaleControl: false,
+        streetViewControl: false,
+        rotateControl: false,
+        fullscreenControl: false,
         styles: [
           {
             featureType: 'all',
@@ -54,8 +61,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
       setMap(mapInstance);
 
-      // Geocode both locations
-      const geocoder = new google.maps.Geocoder();
+      // Initialize services
       const directionsService = new google.maps.DirectionsService();
       const directionsRenderer = new google.maps.DirectionsRenderer({
         polylineOptions: {
@@ -63,16 +69,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
           strokeWeight: 4,
           strokeOpacity: 0.8,
         },
-        markerOptions: {
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#EAB308',
-            fillOpacity: 1,
-            strokeColor: '#000',
-            strokeWeight: 2,
-          },
-        },
+        suppressMarkers: true, // We'll add custom markers
       });
 
       directionsRenderer.setMap(mapInstance);
@@ -88,47 +85,55 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
         if (status === 'OK' && result) {
           directionsRenderer.setDirections(result);
           
-          // Custom markers for pickup and dropoff
+          // Get route information
           const route = result.routes[0];
           const leg = route.legs[0];
           
-          // Pickup marker
+          // Create custom pickup marker (green)
           new google.maps.Marker({
             position: leg.start_location,
             map: mapInstance,
             title: 'Pickup Location',
             icon: {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
+              scale: 12,
               fillColor: '#10B981', // green-500
               fillOpacity: 1,
-              strokeColor: '#000',
-              strokeWeight: 2,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
             },
           });
           
-          // Dropoff marker
+          // Create custom dropoff marker (red)
           new google.maps.Marker({
             position: leg.end_location,
             map: mapInstance,
             title: 'Dropoff Location',
             icon: {
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
+              scale: 12,
               fillColor: '#EF4444', // red-500
               fillOpacity: 1,
-              strokeColor: '#000',
-              strokeWeight: 2,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
             },
           });
+
+          // Fit map to show both markers and route
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(leg.start_location);
+          bounds.extend(leg.end_location);
+          mapInstance.fitBounds(bounds, { padding: 50 });
           
           setIsLoading(false);
         } else {
+          console.error('Directions request failed:', status);
           setError('Unable to calculate route');
           setIsLoading(false);
         }
       });
     } catch (err) {
+      console.error('Map initialization error:', err);
       setError('Failed to load map');
       setIsLoading(false);
     }
@@ -178,7 +183,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
         {/* Map Container */}
         <div className="absolute inset-0 pt-32">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800 z-10">
               <div className="text-center">
                 <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-white">Loading route...</p>
@@ -187,9 +192,11 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
           )}
           
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800 z-10">
               <div className="text-center">
-                <MapPin className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                  <X className="w-6 h-6 text-red-500" />
+                </div>
                 <p className="text-white text-lg font-semibold mb-2">Route Error</p>
                 <p className="text-slate-300">{error}</p>
               </div>
