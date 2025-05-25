@@ -146,14 +146,6 @@ const ReviewConfirm = () => {
           </div>
         </div>
 
-        {/* Debug Info - Remove this in production */}
-        <div className="bg-red-900/20 backdrop-blur-md rounded-xl p-4 border border-red-500/20">
-          <h3 className="text-red-400 font-semibold mb-2">Debug Info:</h3>
-          <pre className="text-xs text-red-300 overflow-auto">
-            {JSON.stringify(bookingData, null, 2)}
-          </pre>
-        </div>
-
         {/* Confirm Button */}
         <Button 
           onClick={handleConfirm}
