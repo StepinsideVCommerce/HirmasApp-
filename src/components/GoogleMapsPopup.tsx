@@ -1,10 +1,10 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { MapPin, Navigation, AlertCircle } from 'lucide-react';
+import { useGoogleMapsApi } from '@/hooks/useGoogleMapsApi';
 
 interface GoogleMapsPopupProps {
   isOpen: boolean;
@@ -34,31 +34,11 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [apiKey, setApiKey] = useState<string>('');
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  const [isGoogleMapsReady, setIsGoogleMapsReady] = useState(false);
-
-  // Get API key from Supabase secrets
-  useEffect(() => {
-    const getApiKey = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-google-maps-key');
-        if (!error && data?.apiKey) {
-          setApiKey(data.apiKey);
-        }
-      } catch (error) {
-        console.error('Error fetching API key:', error);
-      }
-    };
-
-    if (isOpen) {
-      getApiKey();
-    }
-  }, [isOpen]);
+  const { isLoaded, apiKey, error } = useGoogleMapsApi();
 
   // Get user's current location
   useEffect(() => {
-    if (isOpen && navigator.geolocation && isScriptLoaded && isGoogleMapsReady) {
+    if (isOpen && navigator.geolocation && isLoaded) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
@@ -88,20 +68,18 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
         }
       );
     }
-  }, [isOpen, geocoder, isScriptLoaded, isGoogleMapsReady]);
+  }, [isOpen, geocoder, isLoaded]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-    // Only create geocoder when script is loaded and google is available
+    // Only create geocoder when Google Maps is loaded
     if (window.google && window.google.maps) {
       setGeocoder(new window.google.maps.Geocoder());
-      setIsGoogleMapsReady(true);
     }
   }, []);
 
   const onUnmount = useCallback(() => {
     setMap(null);
-    setIsGoogleMapsReady(false);
   }, []);
 
   const onMapClick = useCallback((event: google.maps.MapMouseEvent) => {
@@ -170,14 +148,9 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
     }
   };
 
-  const handleScriptLoad = () => {
-    setIsScriptLoaded(true);
-  };
-
   // Create custom marker icon safely after Google Maps is ready
   const createCustomMarkerIcon = useCallback(() => {
     if (!window.google?.maps?.Size) {
-      console.warn("Google Maps API not loaded yet");
       return undefined;
     }
 
@@ -192,12 +165,30 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
     };
   }, []);
 
-  if (!apiKey) {
+  if (error) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900 border-slate-700">
           <DialogHeader>
-            <DialogTitle className="text-white text-xl">Loading Map...</DialogTitle>
+            <DialogTitle className="text-white text-xl">{title}</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <div className="text-white">Error loading map: {error}</div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!apiKey || !isLoaded) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white text-xl">{title}</DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center h-96">
             <div className="text-white">Loading Google Maps...</div>
@@ -234,55 +225,50 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
           </div>
 
           <div className="rounded-lg overflow-hidden" style={{ height: '500px' }}>
-            <LoadScript 
-              googleMapsApiKey={apiKey}
-              onLoad={handleScriptLoad}
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={currentLocation}
+              zoom={15}
+              onLoad={onLoad}
+              onUnmount={onUnmount}
+              onClick={onMapClick}
+              options={{
+                styles: [
+                  {
+                    "featureType": "all",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#242f3e"}]
+                  },
+                  {
+                    "featureType": "all",
+                    "elementType": "labels.text.stroke",
+                    "stylers": [{"lightness": -80}]
+                  },
+                  {
+                    "featureType": "administrative",
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#746855"}]
+                  },
+                  {
+                    "featureType": "road",
+                    "elementType": "geometry.fill",
+                    "stylers": [{"color": "#2b3544"}]
+                  },
+                  {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#17263c"}]
+                  }
+                ]
+              }}
             >
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={currentLocation}
-                zoom={15}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-                onClick={onMapClick}
-                options={{
-                  styles: [
-                    {
-                      "featureType": "all",
-                      "elementType": "geometry",
-                      "stylers": [{"color": "#242f3e"}]
-                    },
-                    {
-                      "featureType": "all",
-                      "elementType": "labels.text.stroke",
-                      "stylers": [{"lightness": -80}]
-                    },
-                    {
-                      "featureType": "administrative",
-                      "elementType": "labels.text.fill",
-                      "stylers": [{"color": "#746855"}]
-                    },
-                    {
-                      "featureType": "road",
-                      "elementType": "geometry.fill",
-                      "stylers": [{"color": "#2b3544"}]
-                    },
-                    {
-                      "featureType": "water",
-                      "elementType": "geometry",
-                      "stylers": [{"color": "#17263c"}]
-                    }
-                  ]
-                }}
-              >
-                {selectedPosition && isGoogleMapsReady && (
-                  <Marker
-                    position={selectedPosition}
-                    icon={createCustomMarkerIcon()}
-                  />
-                )}
-              </GoogleMap>
-            </LoadScript>
+              {selectedPosition && isLoaded && (
+                <Marker
+                  position={selectedPosition}
+                  icon={createCustomMarkerIcon()}
+                />
+              )}
+            </GoogleMap>
           </div>
 
           <div className="flex justify-between items-center pt-4">

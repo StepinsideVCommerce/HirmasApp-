@@ -1,10 +1,11 @@
+
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { Search, MapPin, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useGoogleMapsApi } from "@/hooks/useGoogleMapsApi";
 
 interface MapComponentProps {
   pickupLocation?: string;
@@ -16,10 +17,6 @@ interface MarkerData {
   lng: number;
   title: string;
 }
-
-const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = [
-  "places",
-];
 
 const mapContainerStyle = {
   width: "100%",
@@ -37,37 +34,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
   dropoffLocation,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [apiKey, setApiKey] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isApiKeyLoaded, setIsApiKeyLoaded] = useState(false);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const { toast } = useToast();
-
-  // Fetch Google Maps API key
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke(
-          "get-google-maps-key"
-        );
-        if (!error && data?.apiKey) {
-          setApiKey(data.apiKey);
-          setIsApiKeyLoaded(true);
-          console.log("Google Maps API key loaded successfully");
-        } else {
-          console.log("No API key configured, using fallback map");
-          setIsApiKeyLoaded(true);
-        }
-      } catch (error) {
-        console.log("Failed to fetch API key, using fallback map", error);
-        setIsApiKeyLoaded(true);
-      }
-    };
-
-    fetchApiKey();
-  }, []);
+  const { isLoaded, isLoading: apiLoading, apiKey, error } = useGoogleMapsApi();
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -80,7 +51,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   const geocodeLocation = async (location: string) => {
     // Demo mode - simulate geocoding without Google Maps API
-    if (!apiKey) {
+    if (!apiKey || !isLoaded) {
       setIsLoading(true);
       console.log("Demo geocoding location:", location);
 
@@ -305,8 +276,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
     );
   };
 
-  // If API key is not loaded yet, show loading with search controls
-  if (!isApiKeyLoaded) {
+  // Loading state
+  if (apiLoading) {
     return (
       <div className="relative w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
         <SearchControls />
@@ -315,8 +286,24 @@ const MapComponent: React.FC<MapComponentProps> = ({
     );
   }
 
-  // If no API key, show fallback with search controls
-  if (!apiKey) {
+  // Error state
+  if (error) {
+    return (
+      <div className="relative w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
+        <SearchControls />
+        <div className="text-center p-6">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-white text-lg font-semibold mb-2">
+            Map Error
+          </h3>
+          <p className="text-slate-300 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no API key or not loaded, show fallback with search controls
+  if (!apiKey || !isLoaded) {
     return (
       <div className="relative w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
         <SearchControls />
@@ -348,56 +335,45 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   return (
     <div className="relative w-full h-full min-h-[500px] rounded-lg overflow-hidden">
-      <LoadScript
-        googleMapsApiKey={apiKey}
-        libraries={libraries}
-        loadingElement={
-          <div className="w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
-            <SearchControls />
-            <div className="text-white">Loading map...</div>
-          </div>
-        }
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={defaultCenter}
+        zoom={12}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+        options={{
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry.fill",
+              stylers: [{ color: "#1e293b" }],
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#0f172a" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#374151" }],
+            },
+          ],
+          disableDefaultUI: false,
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: true,
+        }}
       >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={defaultCenter}
-          zoom={12}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          options={{
-            styles: [
-              {
-                featureType: "all",
-                elementType: "geometry.fill",
-                stylers: [{ color: "#1e293b" }],
-              },
-              {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#0f172a" }],
-              },
-              {
-                featureType: "road",
-                elementType: "geometry",
-                stylers: [{ color: "#374151" }],
-              },
-            ],
-            disableDefaultUI: false,
-            zoomControl: true,
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: true,
-          }}
-        >
-          {markers.map((marker, index) => (
-            <Marker
-              key={index}
-              position={{ lat: marker.lat, lng: marker.lng }}
-              title={marker.title}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
+        {markers.map((marker, index) => (
+          <Marker
+            key={index}
+            position={{ lat: marker.lat, lng: marker.lng }}
+            title={marker.title}
+          />
+        ))}
+      </GoogleMap>
 
       {/* Always render search controls on top */}
       <SearchControls />
