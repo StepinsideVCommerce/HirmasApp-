@@ -224,16 +224,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
         </GoogleMap>
       </LoadScript>
 
-      {/* Search Controls - Prominently displayed */}
-      <div className="absolute top-4 left-4 right-4 z-10">
-        <div className="bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-lg border border-slate-200">
-          <div className="flex flex-col sm:flex-row gap-3">
+      {/* Enhanced Search Controls - Always visible and properly positioned */}
+      <div className="absolute top-2 left-2 right-2 z-50">
+        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-3">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex-1 relative">
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for a location (e.g., Statue of Liberty, Times Square)"
-                className="bg-white border-slate-300 text-slate-900 pl-10 h-12 focus:ring-2 focus:ring-blue-500"
+                placeholder="Search for a location..."
+                className="bg-white border-gray-300 text-gray-900 pl-10 h-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 onKeyPress={handleKeyPress}
               />
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 w-4 h-4" />
@@ -242,16 +242,18 @@ const MapComponent: React.FC<MapComponentProps> = ({
               <Button
                 onClick={handleSearch}
                 disabled={isLoading}
-                className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:opacity-50"
+                size="sm"
+                className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50"
               >
-                <Search className="w-4 h-4 mr-2" />
+                <Search className="w-4 h-4 mr-1" />
                 {isLoading ? 'Searching...' : 'Search'}
               </Button>
               {markers.length > 0 && (
                 <Button
                   onClick={clearMarkers}
                   variant="outline"
-                  className="h-12 border-slate-300 text-slate-700 hover:bg-slate-100"
+                  size="sm"
+                  className="h-10 border-gray-300 text-gray-700 hover:bg-gray-100"
                 >
                   Clear
                 </Button>
@@ -261,16 +263,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
         </div>
       </div>
 
-      {/* Results Info */}
+      {/* Results Info - More compact for popup use */}
       {markers.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <div className="bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-lg border border-slate-200">
+        <div className="absolute bottom-2 left-2 right-2 z-50">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
             <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-slate-900 font-semibold">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
-                <p className="text-slate-600 text-sm">Latest: {markers[markers.length - 1]?.title}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-gray-900 font-medium text-sm">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
+                <p className="text-gray-600 text-xs truncate">Latest: {markers[markers.length - 1]?.title}</p>
               </div>
-              <MapPin className="w-6 h-6 text-blue-500" />
+              <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
             </div>
           </div>
         </div>
