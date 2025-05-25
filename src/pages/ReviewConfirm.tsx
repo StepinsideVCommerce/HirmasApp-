@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Car, Phone, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,10 @@ import { useBookingFlow } from '@/hooks/useBookingFlow';
 const ReviewConfirm = () => {
   const navigate = useNavigate();
   const { bookingData } = useBookingFlow();
+
+  useEffect(() => {
+    console.log('ReviewConfirm page loaded with booking data:', bookingData);
+  }, [bookingData]);
 
   const handleConfirm = async () => {
     console.log('Booking confirmed:', bookingData);
@@ -132,9 +136,22 @@ const ReviewConfirm = () => {
           </div>
           
           <div>
-            <p className="text-white font-medium text-lg">{bookingData.carType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not selected'}</p>
+            <p className="text-white font-medium text-lg">
+              {bookingData.carType ? 
+                bookingData.carType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 
+                'Not selected'
+              }
+            </p>
             <p className="text-slate-400">Premium transportation service</p>
           </div>
+        </div>
+
+        {/* Debug Info - Remove this in production */}
+        <div className="bg-red-900/20 backdrop-blur-md rounded-xl p-4 border border-red-500/20">
+          <h3 className="text-red-400 font-semibold mb-2">Debug Info:</h3>
+          <pre className="text-xs text-red-300 overflow-auto">
+            {JSON.stringify(bookingData, null, 2)}
+          </pre>
         </div>
 
         {/* Confirm Button */}
