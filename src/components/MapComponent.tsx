@@ -1,158 +1,266 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { Search, MapPin, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface MapComponentProps {
   pickupLocation?: string;
   dropoffLocation?: string;
 }
 
+interface MarkerData {
+  lat: number;
+  lng: number;
+  title: string;
+}
+
+const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ["places"];
+
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+const defaultCenter = {
+  lat: 40.7589, // New York City
+  lng: -73.9851
+};
+
 const MapComponent: React.FC<MapComponentProps> = ({ 
   pickupLocation,
   dropoffLocation
 }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
-  
-  // For demonstration purposes - in production, this would be stored securely
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [markers, setMarkers] = useState<MarkerData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const { toast } = useToast();
+
+  // Fetch Google Maps API key
   useEffect(() => {
-    // Initialize the map
-    if (!mapRef.current) return;
-    
-    // Display a placeholder map with styling similar to map services
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Set canvas dimensions
-    const updateCanvasSize = () => {
-      if (!mapRef.current) return;
-      canvas.width = mapRef.current.offsetWidth;
-      canvas.height = mapRef.current.offsetHeight;
-      drawMap();
+    const fetchApiKey = async () => {
+      try {
+        const response = await fetch('/api/get-google-maps-key');
+        if (response.ok) {
+          const data = await response.json();
+          setApiKey(data.apiKey);
+        } else {
+          console.log('No API key configured, using fallback map');
+        }
+      } catch (error) {
+        console.log('Failed to fetch API key, using fallback map');
+      }
     };
-    
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    
-    // Draw a simplified map representation
-    function drawMap() {
-      if (!ctx) return;
-      
-      // Background
-      ctx.fillStyle = '#1a2c38';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw road network
-      ctx.strokeStyle = '#2d4c6a';
-      ctx.lineWidth = 2;
-      
-      // Horizontal roads
-      for (let y = 20; y < canvas.height; y += 60) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y + Math.random() * 40);
-        ctx.stroke();
-      }
-      
-      // Vertical roads
-      for (let x = 20; x < canvas.width; x += 80) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + Math.random() * 30, canvas.height);
-        ctx.stroke();
-      }
-      
-      // Draw pickup point if available
-      if (pickupLocation) {
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(canvas.width / 3, canvas.height / 2, 10, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      
-      // Draw destination if available
-      if (dropoffLocation) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.beginPath();
-        ctx.arc(canvas.width * 2/3, canvas.height / 2, 10, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Draw route line between points
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width / 3, canvas.height / 2);
-        
-        // Create a curved path
-        ctx.bezierCurveTo(
-          canvas.width / 2, canvas.height / 3,
-          canvas.width / 2, canvas.height * 2/3,
-          canvas.width * 2/3, canvas.height / 2
-        );
-        ctx.stroke();
-      }
-      
-      // Current location indicator (blue dot with pulsing effect)
-      ctx.fillStyle = '#3b82f6';
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, 8, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // Pulsing circle
-      const pulseSize = 8 + (Math.sin(Date.now() / 500) + 1) * 5;
-      ctx.strokeStyle = '#3b82f680';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(canvas.width / 2, canvas.height / 2, pulseSize, 0, 2 * Math.PI);
-      ctx.stroke();
+
+    fetchApiKey();
+  }, []);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
+
+  const geocodeLocation = async (location: string) => {
+    if (!map || !window.google) {
+      toast({
+        title: "Error",
+        description: "Map not ready. Please try again.",
+        variant: "destructive"
+      });
+      return;
     }
-    
-    // Append canvas to map container
-    mapRef.current.appendChild(canvas);
-    
-    // Animation loop for pulsing effect
-    const animate = () => {
-      drawMap();
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', updateCanvasSize);
-      if (mapRef.current && mapRef.current.contains(canvas)) {
-        mapRef.current.removeChild(canvas);
+
+    setIsLoading(true);
+    const geocoder = new window.google.maps.Geocoder();
+
+    try {
+      const response = await new Promise<google.maps.GeocoderResponse>((resolve, reject) => {
+        geocoder.geocode({ address: location }, (results, status) => {
+          if (status === 'OK' && results) {
+            resolve({ results, status });
+          } else {
+            reject(new Error(`Geocoding failed: ${status}`));
+          }
+        });
+      });
+
+      if (response.results && response.results[0]) {
+        const result = response.results[0];
+        const position = result.geometry.location;
+        const lat = position.lat();
+        const lng = position.lng();
+
+        // Center map on the location
+        map.setCenter({ lat, lng });
+        map.setZoom(15);
+
+        // Add marker
+        const newMarker: MarkerData = {
+          lat,
+          lng,
+          title: result.formatted_address || location
+        };
+
+        setMarkers(prev => [...prev, newMarker]);
+
+        toast({
+          title: "Location Found",
+          description: `Found: ${result.formatted_address}`,
+        });
       }
-    };
-  }, [pickupLocation, dropoffLocation]);
-  
+    } catch (error) {
+      toast({
+        title: "Location Not Found",
+        description: "Please try a more specific address or landmark.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: "Empty Search",
+        description: "Please enter a location to search.",
+        variant: "destructive"
+      });
+      return;
+    }
+    geocodeLocation(searchQuery);
+  };
+
+  const clearMarkers = () => {
+    setMarkers([]);
+  };
+
+  // If no API key, show fallback
+  if (!apiKey) {
+    return (
+      <div className="relative w-full h-full bg-slate-800 flex items-center justify-center">
+        <div className="text-center p-6">
+          <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+          <h3 className="text-white text-lg font-semibold mb-2">Map Integration Required</h3>
+          <p className="text-slate-300 text-sm max-w-md">
+            To use the interactive map with search functionality, please configure your Google Maps API key in the project settings.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
-      <div ref={mapRef} className="absolute inset-0" />
-      
-      {/* Add API key input for production use */}
-      {!apiKey && (
-        <div className="absolute bottom-4 right-4 z-10">
-          <div className="bg-slate-800/90 backdrop-blur-md text-white text-xs rounded-lg p-3 max-w-xs">
-            <p>This is a map simulation. For a real map integration, configure a map API key in your project settings.</p>
+      <LoadScript
+        googleMapsApiKey={apiKey}
+        libraries={libraries}
+        loadingElement={
+          <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+            <div className="text-white">Loading map...</div>
+          </div>
+        }
+      >
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={defaultCenter}
+          zoom={12}
+          onLoad={onLoad}
+          onUnmount={onUnmount}
+          options={{
+            styles: [
+              {
+                featureType: "all",
+                elementType: "geometry.fill",
+                stylers: [{ color: "#1e293b" }]
+              },
+              {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: [{ color: "#0f172a" }]
+              },
+              {
+                featureType: "road",
+                elementType: "geometry",
+                stylers: [{ color: "#374151" }]
+              }
+            ],
+            disableDefaultUI: false,
+            zoomControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: true,
+          }}
+        >
+          {markers.map((marker, index) => (
+            <Marker
+              key={index}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              title={marker.title}
+            />
+          ))}
+        </GoogleMap>
+      </LoadScript>
+
+      {/* Search Controls */}
+      <div className="absolute top-4 left-4 right-4 z-10">
+        <div className="bg-slate-800/95 backdrop-blur-md rounded-xl p-4 shadow-lg">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for a location (e.g., Statue of Liberty)"
+                className="bg-slate-700 border-slate-600 text-white pl-10 h-12"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-500 w-4 h-4" />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="h-12 px-6 gold-gradient text-black font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                {isLoading ? 'Searching...' : 'Search'}
+              </Button>
+              {markers.length > 0 && (
+                <Button
+                  onClick={clearMarkers}
+                  variant="outline"
+                  className="h-12 border-slate-600 text-white hover:bg-slate-700"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Info */}
+      {markers.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 z-10">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-xl p-4 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-white font-semibold">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
+                <p className="text-slate-300 text-sm">Latest: {markers[markers.length - 1]?.title}</p>
+              </div>
+              <MapPin className="w-6 h-6 text-yellow-500" />
+            </div>
           </div>
         </div>
       )}
-      
-      {/* Map overlay controls - can be enabled when using real map APIs */}
-      <div className="absolute top-20 right-4 z-10 flex flex-col space-y-2">
-        <button className="bg-slate-800 text-white p-2 rounded-full shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
-        <button className="bg-slate-800 text-white p-2 rounded-full shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 };
