@@ -35,6 +35,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   // Get API key from Supabase secrets
   useEffect(() => {
@@ -46,8 +47,6 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
         }
       } catch (error) {
         console.error('Error fetching API key:', error);
-        // Fallback to the direct key for now
-        setApiKey("AIzaSyBcpe03_PGoaE9TsAcXMEomsCXzNlLu6KY");
       }
     };
 
@@ -58,7 +57,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
 
   // Get user's current location
   useEffect(() => {
-    if (isOpen && navigator.geolocation) {
+    if (isOpen && navigator.geolocation && isScriptLoaded) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const pos = {
@@ -82,11 +81,14 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
         }
       );
     }
-  }, [isOpen, geocoder]);
+  }, [isOpen, geocoder, isScriptLoaded]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-    setGeocoder(new google.maps.Geocoder());
+    // Only create geocoder when script is loaded and google is available
+    if (window.google && window.google.maps) {
+      setGeocoder(new window.google.maps.Geocoder());
+    }
   }, []);
 
   const onUnmount = useCallback(() => {
@@ -146,6 +148,10 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
     }
   };
 
+  const handleScriptLoad = () => {
+    setIsScriptLoaded(true);
+  };
+
   if (!apiKey) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -188,7 +194,10 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
           </div>
 
           <div className="rounded-lg overflow-hidden">
-            <LoadScript googleMapsApiKey={apiKey}>
+            <LoadScript 
+              googleMapsApiKey={apiKey}
+              onLoad={handleScriptLoad}
+            >
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={currentLocation}
@@ -226,7 +235,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
                   ]
                 }}
               >
-                {selectedPosition && (
+                {selectedPosition && isScriptLoaded && (
                   <Marker
                     position={selectedPosition}
                     icon={{
@@ -236,7 +245,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
                           <circle cx="16" cy="12" r="4" fill="#000"/>
                         </svg>
                       `),
-                      scaledSize: new google.maps.Size(32, 32),
+                      scaledSize: isScriptLoaded && window.google ? new window.google.maps.Size(32, 32) : undefined,
                     }}
                   />
                 )}
