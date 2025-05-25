@@ -67,13 +67,19 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
           setCurrentLocation(pos);
           setSelectedPosition(pos);
           
-          // Get address for current location
+          // Try to get address for current location, but don't require it
           if (geocoder) {
             geocoder.geocode({ location: pos }, (results, status) => {
               if (status === 'OK' && results?.[0]) {
                 setSelectedAddress(results[0].formatted_address);
+              } else {
+                // Fallback address if geocoding fails
+                setSelectedAddress(`${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
               }
             });
+          } else {
+            // Fallback address if no geocoder
+            setSelectedAddress(`${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
           }
         },
         () => {
@@ -101,20 +107,28 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
       const lng = event.latLng.lng();
       setSelectedPosition({ lat, lng });
 
-      // Reverse geocode to get address
+      // Try to reverse geocode to get address, but provide fallback
       if (geocoder) {
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
           if (status === 'OK' && results?.[0]) {
             setSelectedAddress(results[0].formatted_address);
+          } else {
+            // Fallback to coordinates if geocoding fails
+            setSelectedAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
           }
         });
+      } else {
+        // Fallback to coordinates if no geocoder
+        setSelectedAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
       }
     }
   }, [geocoder]);
 
   const handleConfirm = () => {
-    if (selectedPosition && selectedAddress) {
-      onLocationSelect(selectedAddress, selectedPosition.lat, selectedPosition.lng);
+    if (selectedPosition) {
+      // Use selectedAddress if available, otherwise use coordinates
+      const addressToUse = selectedAddress || `${selectedPosition.lat.toFixed(6)}, ${selectedPosition.lng.toFixed(6)}`;
+      onLocationSelect(addressToUse, selectedPosition.lat, selectedPosition.lng);
       onClose();
     }
   };
@@ -133,12 +147,17 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
             map.panTo(pos);
           }
           
+          // Try to get address, but provide fallback
           if (geocoder) {
             geocoder.geocode({ location: pos }, (results, status) => {
               if (status === 'OK' && results?.[0]) {
                 setSelectedAddress(results[0].formatted_address);
+              } else {
+                setSelectedAddress(`${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
               }
             });
+          } else {
+            setSelectedAddress(`${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
           }
         },
         (error) => {
@@ -263,7 +282,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={!selectedPosition || !selectedAddress}
+              disabled={!selectedPosition}
               className="gold-gradient text-black font-semibold hover:opacity-90"
             >
               Confirm Location
