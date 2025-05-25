@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -92,7 +93,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 relative">
       <label className="text-white font-medium">{label}</label>
       <div className="relative">
         <div className="relative">
@@ -122,9 +123,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
 
         {/* Autocomplete Predictions Dropdown */}
         {showPredictions && (predictions.length > 0 || isLoading) && (
-          <div className="absolute top-full left-0 right-0 z-[9999] mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-80 overflow-y-auto backdrop-blur-sm">
+          <div className="fixed inset-x-4 z-[9999] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
             {isLoading && (
-              <div className="p-4 text-slate-400 text-center">
+              <div className="p-4 text-gray-600 text-center">
                 Searching...
               </div>
             )}
@@ -133,15 +134,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
               <div
                 key={prediction.place_id}
                 onClick={() => handlePredictionSelect(prediction)}
-                className="p-4 hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0 transition-colors"
+                className="p-4 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0 transition-colors"
               >
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-white truncate">
+                    <div className="font-medium text-gray-900 truncate">
                       {prediction.structured_formatting.main_text}
                     </div>
-                    <div className="text-sm text-slate-400 truncate">
+                    <div className="text-sm text-gray-600 truncate">
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   </div>
