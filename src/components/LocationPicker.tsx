@@ -1,9 +1,8 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useGoogleMapsApi } from '@/hooks/useGoogleMapsApi';
+import React, { useState, useRef, useEffect } from "react";
+import { MapPin, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useGoogleMapsApi } from "@/hooks/useGoogleMapsApi";
 
 interface LocationPickerProps {
   label: string;
@@ -21,24 +20,31 @@ interface Prediction {
   };
 }
 
-const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange, placeholder }) => {
+const LocationPicker: React.FC<LocationPickerProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+}) => {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const autocompleteService =
+    useRef<google.maps.places.AutocompleteService | null>(null);
   const { isLoaded } = useGoogleMapsApi();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize the autocomplete service when Google Maps is loaded
   useEffect(() => {
     if (isLoaded && window.google?.maps?.places?.AutocompleteService) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      autocompleteService.current =
+        new window.google.maps.places.AutocompleteService();
     }
   }, [isLoaded]);
 
   const handleInputChange = (inputValue: string) => {
     onChange(inputValue);
-    
+
     if (!autocompleteService.current || !inputValue.trim()) {
       setPredictions([]);
       setShowPredictions(false);
@@ -46,15 +52,18 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
     }
 
     setIsLoading(true);
-    
+
     autocompleteService.current.getPlacePredictions(
       {
         input: inputValue,
-        types: ['establishment', 'geocode'],
+        types: ["establishment", "geocode"],
       },
       (predictions, status) => {
         setIsLoading(false);
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+        if (
+          status === window.google.maps.places.PlacesServiceStatus.OK &&
+          predictions
+        ) {
           setPredictions(predictions);
           setShowPredictions(true);
         } else {
@@ -73,7 +82,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
   };
 
   const clearInput = () => {
-    onChange('');
+    onChange("");
     setPredictions([]);
     setShowPredictions(false);
     inputRef.current?.focus();
@@ -107,7 +116,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
             className="bg-slate-800 border-slate-700 text-white pl-12 pr-12 h-14 text-lg"
           />
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 w-5 h-5" />
-          
+
           {value && (
             <Button
               type="button"
@@ -123,13 +132,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
 
         {/* Autocomplete Predictions Dropdown */}
         {showPredictions && (predictions.length > 0 || isLoading) && (
-          <div className="fixed inset-x-4 z-[9999] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 z-[99999] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
             {isLoading && (
-              <div className="p-4 text-gray-600 text-center">
-                Searching...
-              </div>
+              <div className="p-4 text-gray-600 text-center">Searching...</div>
             )}
-            
+
             {predictions.map((prediction) => (
               <div
                 key={prediction.place_id}
