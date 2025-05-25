@@ -6,13 +6,6 @@ import { Button } from '@/components/ui/button';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { useToast } from '@/hooks/use-toast';
 import LocationPicker from '@/components/LocationPicker';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
@@ -146,51 +139,46 @@ const VehicleSelection = () => {
 
         {/* Vehicle Selection */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Choose your vehicle</h2>
+          <h2 className="text-lg font-semibold text-white mb-6">Choose your vehicle</h2>
 
-          <Carousel className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {vehicles.map((vehicle) => (
-                <CarouselItem key={vehicle.id} className="pl-2 md:pl-4 basis-full">
-                  <div 
-                    onClick={() => handleVehicleSelect(vehicle.id)}
-                    className={`relative overflow-hidden group cursor-pointer p-6 rounded-xl transition-all duration-300 ${
-                      selectedVehicle === vehicle.id 
-                        ? 'bg-yellow-500/20 border-2 border-yellow-500 shadow-lg shadow-yellow-500/20' 
-                        : 'bg-slate-700 hover:bg-slate-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-20 h-20 bg-slate-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Car className="w-12 h-12 text-yellow-500" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-white">{vehicle.name}</h3>
-                        <p className="text-slate-300">{vehicle.description}</p>
-                        
-                        <div className="flex items-center mt-3">
-                          <div className="flex items-center text-slate-400">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{vehicle.eta}</span>
-                          </div>
-                        </div>
+          <div className="grid gap-4">
+            {vehicles.map((vehicle) => (
+              <div 
+                key={vehicle.id}
+                onClick={() => handleVehicleSelect(vehicle.id)}
+                className={`relative overflow-hidden group cursor-pointer p-6 rounded-xl transition-all duration-300 ${
+                  selectedVehicle === vehicle.id 
+                    ? 'bg-yellow-500/20 border-2 border-yellow-500 shadow-lg shadow-yellow-500/20' 
+                    : 'bg-slate-700 hover:bg-slate-600 border-2 border-transparent'
+                }`}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="w-20 h-20 bg-slate-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Car className="w-12 h-12 text-yellow-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-white">{vehicle.name}</h3>
+                    <p className="text-slate-300">{vehicle.description}</p>
+                    
+                    <div className="flex items-center mt-3">
+                      <div className="flex items-center text-slate-400">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{vehicle.eta}</span>
                       </div>
                     </div>
-                    
-                    {selectedVehicle === vehicle.id && (
-                      <div className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-black">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      </div>
-                    )}
                   </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white hover:bg-slate-700 border-none" />
-            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white hover:bg-slate-700 border-none" />
-          </Carousel>
+                </div>
+                
+                {selectedVehicle === vehicle.id && (
+                  <div className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-black">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Continue Button */}
