@@ -123,9 +123,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
 
         {/* Autocomplete Predictions Dropdown */}
         {showPredictions && (predictions.length > 0 || isLoading) && (
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-80 overflow-y-auto">
             {isLoading && (
-              <div className="p-4 text-gray-500 text-center">
+              <div className="p-4 text-slate-400 text-center">
                 Searching...
               </div>
             )}
@@ -134,15 +134,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
               <div
                 key={prediction.place_id}
                 onClick={() => handlePredictionSelect(prediction)}
-                className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                className="p-4 hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0 transition-colors"
               >
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
+                    <div className="font-medium text-white truncate">
                       {prediction.structured_formatting.main_text}
                     </div>
-                    <div className="text-sm text-gray-500 truncate">
+                    <div className="text-sm text-slate-400 truncate">
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   </div>
