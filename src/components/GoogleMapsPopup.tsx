@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,7 +14,7 @@ interface GoogleMapsPopupProps {
 
 const mapContainerStyle = {
   width: '100%',
-  height: '400px',
+  height: '500px',
 };
 
 const defaultCenter = {
@@ -188,7 +187,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900 border-slate-700">
+      <DialogContent className="max-w-5xl max-h-[90vh] bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-white text-xl">{title}</DialogTitle>
         </DialogHeader>
@@ -212,7 +211,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
             )}
           </div>
 
-          <div className="rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden" style={{ height: '500px' }}>
             <LoadScript 
               googleMapsApiKey={apiKey}
               onLoad={handleScriptLoad}

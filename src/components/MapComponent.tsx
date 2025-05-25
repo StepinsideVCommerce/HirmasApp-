@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { Search, MapPin, AlertCircle } from 'lucide-react';
@@ -21,7 +20,8 @@ const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ["pla
 
 const mapContainerStyle = {
   width: '100%',
-  height: '100%'
+  height: '100%',
+  minHeight: '400px'
 };
 
 const defaultCenter = {
@@ -38,6 +38,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [markers, setMarkers] = useState<MarkerData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isApiKeyLoaded, setIsApiKeyLoaded] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const { toast } = useToast();
 
@@ -49,12 +50,15 @@ const MapComponent: React.FC<MapComponentProps> = ({
         if (response.ok) {
           const data = await response.json();
           setApiKey(data.apiKey);
+          setIsApiKeyLoaded(true);
           console.log('Google Maps API key loaded successfully');
         } else {
           console.log('No API key configured, using fallback map');
+          setIsApiKeyLoaded(true);
         }
       } catch (error) {
         console.log('Failed to fetch API key, using fallback map', error);
+        setIsApiKeyLoaded(true);
       }
     };
 
@@ -157,10 +161,81 @@ const MapComponent: React.FC<MapComponentProps> = ({
     console.log('Markers cleared');
   };
 
-  // If no API key, show fallback
+  // Search Controls Component - Always render this
+  const SearchControls = () => (
+    <div className="absolute top-4 left-4 right-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for a location..."
+              className="bg-white border-gray-300 text-gray-900 pl-10 h-12 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onKeyPress={handleKeyPress}
+            />
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 w-5 h-5" />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSearch}
+              disabled={isLoading || !searchQuery.trim()}
+              size="sm"
+              className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              {isLoading ? 'Searching...' : 'Search'}
+            </Button>
+            {markers.length > 0 && (
+              <Button
+                onClick={clearMarkers}
+                variant="outline"
+                size="sm"
+                className="h-12 border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Results Info Component
+  const ResultsInfo = () => {
+    if (markers.length === 0) return null;
+    
+    return (
+      <div className="absolute bottom-4 left-4 right-4 z-50">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-gray-900 font-medium text-sm">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
+              <p className="text-gray-600 text-xs truncate">Latest: {markers[markers.length - 1]?.title}</p>
+            </div>
+            <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // If API key is not loaded yet, show loading with search controls
+  if (!isApiKeyLoaded) {
+    return (
+      <div className="relative w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+        <SearchControls />
+        <div className="text-white">Loading map...</div>
+      </div>
+    );
+  }
+
+  // If no API key, show fallback with search controls
   if (!apiKey) {
     return (
-      <div className="relative w-full h-full bg-slate-800 flex items-center justify-center">
+      <div className="relative w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+        <SearchControls />
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
           <h3 className="text-white text-lg font-semibold mb-2">Map Integration Required</h3>
@@ -173,12 +248,13 @@ const MapComponent: React.FC<MapComponentProps> = ({
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full min-h-[400px]">
       <LoadScript
         googleMapsApiKey={apiKey}
         libraries={libraries}
         loadingElement={
-          <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+          <div className="w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+            <SearchControls />
             <div className="text-white">Loading map...</div>
           </div>
         }
@@ -224,59 +300,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
         </GoogleMap>
       </LoadScript>
 
-      {/* Enhanced Search Controls - Always visible and properly positioned */}
-      <div className="absolute top-2 left-2 right-2 z-50">
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-3">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex-1 relative">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for a location..."
-                className="bg-white border-gray-300 text-gray-900 pl-10 h-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onKeyPress={handleKeyPress}
-              />
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500 w-4 h-4" />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSearch}
-                disabled={isLoading}
-                size="sm"
-                className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50"
-              >
-                <Search className="w-4 h-4 mr-1" />
-                {isLoading ? 'Searching...' : 'Search'}
-              </Button>
-              {markers.length > 0 && (
-                <Button
-                  onClick={clearMarkers}
-                  variant="outline"
-                  size="sm"
-                  className="h-10 border-gray-300 text-gray-700 hover:bg-gray-100"
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Results Info - More compact for popup use */}
-      {markers.length > 0 && (
-        <div className="absolute bottom-2 left-2 right-2 z-50">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <h4 className="text-gray-900 font-medium text-sm">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
-                <p className="text-gray-600 text-xs truncate">Latest: {markers[markers.length - 1]?.title}</p>
-              </div>
-              <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Always render search controls on top */}
+      <SearchControls />
+      
+      {/* Results info */}
+      <ResultsInfo />
     </div>
   );
 };
