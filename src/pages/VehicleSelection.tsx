@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,18 @@ import {
 const VehicleSelection = () => {
   const navigate = useNavigate();
   const { bookingData, updateBookingData } = useBookingFlow();
-  const [selectedVehicle, setSelectedVehicle] = useState('');
   const { toast } = useToast();
+  
+  // Initialize selectedVehicle from bookingData.carType
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  
+  // Sync selectedVehicle with bookingData.carType when component mounts
+  useEffect(() => {
+    if (bookingData.carType) {
+      setSelectedVehicle(bookingData.carType);
+      console.log('Syncing selected vehicle from booking data:', bookingData.carType);
+    }
+  }, [bookingData.carType]);
   
   const vehicles = [
     {
@@ -51,6 +61,12 @@ const VehicleSelection = () => {
     }
   ];
 
+  const handleVehicleSelect = (vehicleId: string) => {
+    console.log('Vehicle selected:', vehicleId);
+    setSelectedVehicle(vehicleId);
+    updateBookingData({ carType: vehicleId });
+  };
+
   const handleContinue = () => {
     if (!bookingData.pickupLocation || !bookingData.dropoffLocation) {
       toast({
@@ -70,7 +86,6 @@ const VehicleSelection = () => {
       return;
     }
     
-    updateBookingData({ carType: selectedVehicle });
     navigate('/user-info');
   };
 
@@ -138,7 +153,7 @@ const VehicleSelection = () => {
               {vehicles.map((vehicle) => (
                 <CarouselItem key={vehicle.id} className="pl-2 md:pl-4 basis-full">
                   <div 
-                    onClick={() => setSelectedVehicle(vehicle.id)}
+                    onClick={() => handleVehicleSelect(vehicle.id)}
                     className={`relative overflow-hidden group cursor-pointer p-6 rounded-xl transition-all duration-300 ${
                       selectedVehicle === vehicle.id 
                         ? 'bg-yellow-500/20 border-2 border-yellow-500 shadow-lg shadow-yellow-500/20' 
