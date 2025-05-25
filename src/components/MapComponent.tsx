@@ -82,7 +82,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     const geocoder = new window.google.maps.Geocoder();
 
     try {
-      const response = await new Promise<google.maps.GeocoderResponse>((resolve, reject) => {
+      const response = await new Promise<{ results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus }>((resolve, reject) => {
         geocoder.geocode({ address: location }, (results, status) => {
           if (status === 'OK' && results) {
             resolve({ results, status });
