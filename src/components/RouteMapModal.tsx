@@ -33,13 +33,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       const mapInstance = new google.maps.Map(mapRef.current, {
         zoom: 13,
         center: { lat: 40.7589, lng: -73.9851 }, // Default to NYC
-        disableDefaultUI: true, // Remove all default controls
-        zoomControl: false,
-        mapTypeControl: false,
-        scaleControl: false,
-        streetViewControl: false,
-        rotateControl: false,
-        fullscreenControl: false,
+        disableDefaultUI: true,
         styles: [
           {
             featureType: 'all',
@@ -69,7 +63,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
           strokeWeight: 4,
           strokeOpacity: 0.8,
         },
-        suppressMarkers: true, // We'll add custom markers
+        suppressMarkers: true,
       });
 
       directionsRenderer.setMap(mapInstance);
@@ -119,11 +113,16 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
             },
           });
 
-          // Fit map to show both markers and route
+          // Fit map to show both markers and route with proper padding
           const bounds = new google.maps.LatLngBounds();
           bounds.extend(leg.start_location);
           bounds.extend(leg.end_location);
-          mapInstance.fitBounds(bounds, { padding: 50 });
+          mapInstance.fitBounds(bounds, {
+            top: 50,
+            bottom: 50,
+            left: 50,
+            right: 50
+          });
           
           setIsLoading(false);
         } else {
