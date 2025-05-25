@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import { Search, MapPin, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import { Search, MapPin, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MapComponentProps {
   pickupLocation?: string;
@@ -16,22 +17,24 @@ interface MarkerData {
   title: string;
 }
 
-const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = ["places"];
+const libraries: ("places" | "geometry" | "drawing" | "visualization")[] = [
+  "places",
+];
 
 const mapContainerStyle = {
-  width: '100%',
-  height: '100%',
-  minHeight: '400px'
+  width: "100%",
+  height: "100%",
+  minHeight: "500px",
 };
 
 const defaultCenter = {
   lat: 40.7589, // New York City
-  lng: -73.9851
+  lng: -73.9851,
 };
 
-const MapComponent: React.FC<MapComponentProps> = ({ 
+const MapComponent: React.FC<MapComponentProps> = ({
   pickupLocation,
-  dropoffLocation
+  dropoffLocation,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
@@ -46,18 +49,19 @@ const MapComponent: React.FC<MapComponentProps> = ({
   useEffect(() => {
     const fetchApiKey = async () => {
       try {
-        const response = await fetch('/api/get-google-maps-key');
-        if (response.ok) {
-          const data = await response.json();
+        const { data, error } = await supabase.functions.invoke(
+          "get-google-maps-key"
+        );
+        if (!error && data?.apiKey) {
           setApiKey(data.apiKey);
           setIsApiKeyLoaded(true);
-          console.log('Google Maps API key loaded successfully');
+          console.log("Google Maps API key loaded successfully");
         } else {
-          console.log('No API key configured, using fallback map');
+          console.log("No API key configured, using fallback map");
           setIsApiKeyLoaded(true);
         }
       } catch (error) {
-        console.log('Failed to fetch API key, using fallback map', error);
+        console.log("Failed to fetch API key, using fallback map", error);
         setIsApiKeyLoaded(true);
       }
     };
@@ -67,7 +71,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-    console.log('Map loaded successfully');
+    console.log("Map loaded successfully");
   }, []);
 
   const onUnmount = useCallback(() => {
@@ -75,24 +79,96 @@ const MapComponent: React.FC<MapComponentProps> = ({
   }, []);
 
   const geocodeLocation = async (location: string) => {
+    // Demo mode - simulate geocoding without Google Maps API
+    if (!apiKey) {
+      setIsLoading(true);
+      console.log("Demo geocoding location:", location);
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Demo coordinates for common locations
+      const demoLocations = [
+        {
+          query: "new york",
+          lat: 40.7589,
+          lng: -73.9851,
+          title: "New York, NY, USA",
+        },
+        { query: "london", lat: 51.5074, lng: -0.1278, title: "London, UK" },
+        { query: "paris", lat: 48.8566, lng: 2.3522, title: "Paris, France" },
+        { query: "tokyo", lat: 35.6762, lng: 139.6503, title: "Tokyo, Japan" },
+        {
+          query: "sydney",
+          lat: -33.8688,
+          lng: 151.2093,
+          title: "Sydney, Australia",
+        },
+      ];
+
+      const match = demoLocations.find((loc) =>
+        location.toLowerCase().includes(loc.query)
+      );
+
+      if (match) {
+        const newMarker: MarkerData = {
+          lat: match.lat,
+          lng: match.lng,
+          title: match.title,
+        };
+
+        setMarkers((prev) => [...prev, newMarker]);
+
+        toast({
+          title: "Location Found (Demo)",
+          description: `Found: ${match.title}`,
+        });
+      } else {
+        // Generic demo location
+        const genericLocation: MarkerData = {
+          lat: 40.7589 + (Math.random() - 0.5) * 0.1,
+          lng: -73.9851 + (Math.random() - 0.5) * 0.1,
+          title: `Demo: ${location}`,
+        };
+
+        setMarkers((prev) => [...prev, genericLocation]);
+
+        toast({
+          title: "Location Found (Demo)",
+          description: `Demo result for: ${location}`,
+        });
+      }
+
+      setIsLoading(false);
+      return;
+    }
+
+    // Real Google Maps geocoding
     if (!map || !window.google?.maps?.Geocoder) {
       toast({
         title: "Error",
         description: "Map not ready. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setIsLoading(true);
-    console.log('Geocoding location:', location);
-    
+    console.log("Geocoding location:", location);
+
     const geocoder = new window.google.maps.Geocoder();
 
     try {
-      const geocodeResults = await new Promise<{results: google.maps.GeocoderResult[], status: google.maps.GeocoderStatus}>((resolve, reject) => {
+      const geocodeResults = await new Promise<{
+        results: google.maps.GeocoderResult[];
+        status: google.maps.GeocoderStatus;
+      }>((resolve, reject) => {
         geocoder.geocode({ address: location }, (results, status) => {
-          if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+          if (
+            status === google.maps.GeocoderStatus.OK &&
+            results &&
+            results.length > 0
+          ) {
             resolve({ results, status });
           } else {
             reject(new Error(`Geocoding failed: ${status}`));
@@ -105,7 +181,11 @@ const MapComponent: React.FC<MapComponentProps> = ({
       const lat = position.lat();
       const lng = position.lng();
 
-      console.log('Location found:', { lat, lng, address: result.formatted_address });
+      console.log("Location found:", {
+        lat,
+        lng,
+        address: result.formatted_address,
+      });
 
       // Center map on the location
       map.setCenter({ lat, lng });
@@ -115,21 +195,21 @@ const MapComponent: React.FC<MapComponentProps> = ({
       const newMarker: MarkerData = {
         lat,
         lng,
-        title: result.formatted_address || location
+        title: result.formatted_address || location,
       };
 
-      setMarkers(prev => [...prev, newMarker]);
+      setMarkers((prev) => [...prev, newMarker]);
 
       toast({
         title: "Location Found",
         description: `Found: ${result.formatted_address}`,
       });
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error("Geocoding error:", error);
       toast({
         title: "Location Not Found",
         description: "Please try a more specific address or landmark.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -141,16 +221,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
       toast({
         title: "Empty Search",
         description: "Please enter a location to search.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    console.log('Searching for:', searchQuery);
+    console.log("Searching for:", searchQuery);
     geocodeLocation(searchQuery);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleSearch();
     }
@@ -158,7 +238,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   const clearMarkers = () => {
     setMarkers([]);
-    console.log('Markers cleared');
+    console.log("Markers cleared");
   };
 
   // Search Controls Component - Always render this
@@ -184,7 +264,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
               className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50"
             >
               <Search className="w-4 h-4 mr-2" />
-              {isLoading ? 'Searching...' : 'Search'}
+              {isLoading ? "Searching..." : "Search"}
             </Button>
             {markers.length > 0 && (
               <Button
@@ -205,14 +285,18 @@ const MapComponent: React.FC<MapComponentProps> = ({
   // Results Info Component
   const ResultsInfo = () => {
     if (markers.length === 0) return null;
-    
+
     return (
       <div className="absolute bottom-4 left-4 right-4 z-50">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <h4 className="text-gray-900 font-medium text-sm">Found {markers.length} location{markers.length > 1 ? 's' : ''}</h4>
-              <p className="text-gray-600 text-xs truncate">Latest: {markers[markers.length - 1]?.title}</p>
+              <h4 className="text-gray-900 font-medium text-sm">
+                Found {markers.length} location{markers.length > 1 ? "s" : ""}
+              </h4>
+              <p className="text-gray-600 text-xs truncate">
+                Latest: {markers[markers.length - 1]?.title}
+              </p>
             </div>
             <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
           </div>
@@ -224,7 +308,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   // If API key is not loaded yet, show loading with search controls
   if (!isApiKeyLoaded) {
     return (
-      <div className="relative w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+      <div className="relative w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
         <SearchControls />
         <div className="text-white">Loading map...</div>
       </div>
@@ -234,26 +318,41 @@ const MapComponent: React.FC<MapComponentProps> = ({
   // If no API key, show fallback with search controls
   if (!apiKey) {
     return (
-      <div className="relative w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+      <div className="relative w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
         <SearchControls />
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h3 className="text-white text-lg font-semibold mb-2">Map Integration Required</h3>
+          <h3 className="text-white text-lg font-semibold mb-2">
+            Demo Mode - Search Available
+          </h3>
           <p className="text-slate-300 text-sm max-w-md">
-            To use the interactive map with search functionality, please configure your Google Maps API key in the project settings.
+            The search functionality is available above. Configure your Google
+            Maps API key to see the interactive map.
           </p>
+
+          {/* Demo search results */}
+          {markers.length > 0 && (
+            <div className="mt-4 p-4 bg-slate-700 rounded-lg">
+              <h4 className="text-white font-medium mb-2">Search Results:</h4>
+              {markers.map((marker, index) => (
+                <div key={index} className="text-slate-300 text-sm">
+                  📍 {marker.title}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full min-h-[400px]">
+    <div className="relative w-full h-full min-h-[500px] rounded-lg overflow-hidden">
       <LoadScript
         googleMapsApiKey={apiKey}
         libraries={libraries}
         loadingElement={
-          <div className="w-full h-full min-h-[400px] bg-slate-800 flex items-center justify-center">
+          <div className="w-full h-full min-h-[500px] bg-slate-800 rounded-lg flex items-center justify-center">
             <SearchControls />
             <div className="text-white">Loading map...</div>
           </div>
@@ -270,18 +369,18 @@ const MapComponent: React.FC<MapComponentProps> = ({
               {
                 featureType: "all",
                 elementType: "geometry.fill",
-                stylers: [{ color: "#1e293b" }]
+                stylers: [{ color: "#1e293b" }],
               },
               {
                 featureType: "water",
                 elementType: "geometry",
-                stylers: [{ color: "#0f172a" }]
+                stylers: [{ color: "#0f172a" }],
               },
               {
                 featureType: "road",
                 elementType: "geometry",
-                stylers: [{ color: "#374151" }]
-              }
+                stylers: [{ color: "#374151" }],
+              },
             ],
             disableDefaultUI: false,
             zoomControl: true,
@@ -302,7 +401,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
       {/* Always render search controls on top */}
       <SearchControls />
-      
+
       {/* Results info */}
       <ResultsInfo />
     </div>
