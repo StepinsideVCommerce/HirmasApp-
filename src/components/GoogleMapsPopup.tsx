@@ -4,6 +4,7 @@ import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleMapsPopupProps {
   isOpen: boolean;
@@ -33,6 +34,27 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [apiKey, setApiKey] = useState<string>('');
+
+  // Get API key from Supabase secrets
+  useEffect(() => {
+    const getApiKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-google-maps-key');
+        if (!error && data?.apiKey) {
+          setApiKey(data.apiKey);
+        }
+      } catch (error) {
+        console.error('Error fetching API key:', error);
+        // Fallback to the direct key for now
+        setApiKey("AIzaSyBcpe03_PGoaE9TsAcXMEomsCXzNlLu6KY");
+      }
+    };
+
+    if (isOpen) {
+      getApiKey();
+    }
+  }, [isOpen]);
 
   // Get user's current location
   useEffect(() => {
@@ -124,8 +146,20 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
     }
   };
 
-  // Note: In production, the API key should be loaded from Supabase secrets
-  const googleMapsApiKey = "AIzaSyBcpe03_PGoaE9TsAcXMEomsCXzNlLu6KY";
+  if (!apiKey) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white text-xl">Loading Map...</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center h-96">
+            <div className="text-white">Loading Google Maps...</div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -154,7 +188,7 @@ const GoogleMapsPopup: React.FC<GoogleMapsPopupProps> = ({
           </div>
 
           <div className="rounded-lg overflow-hidden">
-            <LoadScript googleMapsApiKey={googleMapsApiKey}>
+            <LoadScript googleMapsApiKey={apiKey}>
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={currentLocation}
