@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import GoogleMapsPopup from './GoogleMapsPopup';
 import { useGoogleMapsApi } from '@/hooks/useGoogleMapsApi';
 
 interface LocationPickerProps {
@@ -23,7 +22,6 @@ interface Prediction {
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange, placeholder }) => {
-  const [isMapOpen, setIsMapOpen] = useState(false);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,11 +72,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
     inputRef.current?.blur();
   };
 
-  const handleLocationSelect = (address: string, lat: number, lng: number) => {
-    onChange(address);
-    console.log('Selected location:', { address, lat, lng });
-  };
-
   const clearInput = () => {
     onChange('');
     setPredictions([]);
@@ -111,7 +104,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             placeholder={placeholder}
-            className="bg-slate-800 border-slate-700 text-white pl-12 pr-20 h-14 text-lg"
+            className="bg-slate-800 border-slate-700 text-white pl-12 pr-12 h-14 text-lg"
           />
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 w-5 h-5" />
           
@@ -121,19 +114,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
               onClick={clearInput}
               variant="ghost"
               size="sm"
-              className="absolute right-14 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
             >
               <X className="w-4 h-4" />
             </Button>
           )}
-          
-          <Button
-            type="button"
-            onClick={() => setIsMapOpen(true)}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 gold-gradient text-black font-semibold hover:opacity-90 transition-opacity"
-          >
-            Map
-          </Button>
         </div>
 
         {/* Autocomplete Predictions Dropdown */}
@@ -167,13 +152,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ label, value, onChange,
           </div>
         )}
       </div>
-      
-      <GoogleMapsPopup
-        isOpen={isMapOpen}
-        onClose={() => setIsMapOpen(false)}
-        onLocationSelect={handleLocationSelect}
-        title={`Select ${label}`}
-      />
     </div>
   );
 };

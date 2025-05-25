@@ -1,21 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Car } from "lucide-react";
+import { ArrowLeft, Clock, Car, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 import { useToast } from "@/hooks/use-toast";
 import LocationPicker from "@/components/LocationPicker";
+import RouteMapModal from "@/components/RouteMapModal";
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
   const { bookingData, updateBookingData } = useBookingFlow();
   const { toast } = useToast();
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [isRouteMapOpen, setIsRouteMapOpen] = useState(false);
 
   // Initialize selectedVehicle from bookingData.carType
-  const [selectedVehicle, setSelectedVehicle] = useState("");
-
-  // Sync selectedVehicle with bookingData.carType when component mounts
   useEffect(() => {
     if (bookingData.carType) {
       setSelectedVehicle(bookingData.carType);
@@ -85,6 +84,9 @@ const VehicleSelection = () => {
     navigate("/user-info");
   };
 
+  // Check if both locations are selected
+  const canShowRoute = bookingData.pickupLocation && bookingData.dropoffLocation;
+
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
@@ -146,6 +148,20 @@ const VehicleSelection = () => {
               </div>
             </div>
           </div>
+
+          {/* Show on Map Button */}
+          {canShowRoute && (
+            <div className="mt-6 flex justify-center">
+              <Button
+                onClick={() => setIsRouteMapOpen(true)}
+                variant="outline"
+                className="bg-slate-700/50 border-yellow-500/30 text-white hover:bg-yellow-500/10 hover:border-yellow-500 transition-all duration-200"
+              >
+                <Map className="w-4 h-4 mr-2" />
+                Show Route on Map
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Vehicle Selection */}
@@ -220,6 +236,14 @@ const VehicleSelection = () => {
           Next Step
         </Button>
       </div>
+
+      {/* Route Map Modal */}
+      <RouteMapModal
+        isOpen={isRouteMapOpen}
+        onClose={() => setIsRouteMapOpen(false)}
+        pickupLocation={bookingData.pickupLocation}
+        dropoffLocation={bookingData.dropoffLocation}
+      />
     </div>
   );
 };
