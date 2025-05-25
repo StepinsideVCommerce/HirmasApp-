@@ -1,11 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Car, Map } from "lucide-react";
+import { ArrowLeft, Clock, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 import { useToast } from "@/hooks/use-toast";
 import LocationPicker from "@/components/LocationPicker";
-import MapComponent from "@/components/MapComponent";
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
@@ -204,19 +204,6 @@ const VehicleSelection = () => {
                 )}
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Map Component */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">
-            Route Preview & Search
-          </h2>
-          <div className="h-[500px] rounded-lg overflow-hidden">
-            <MapComponent
-              pickupLocation={bookingData.pickupLocation}
-              dropoffLocation={bookingData.dropoffLocation}
-            />
           </div>
         </div>
 
