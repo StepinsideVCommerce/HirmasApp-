@@ -23,6 +23,83 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { isLoaded } = useGoogleMapsApi();
 
+  const geocodeAndShowMarkers = useCallback(async (mapInstance: google.maps.Map) => {
+    const geocoder = new google.maps.Geocoder();
+    const bounds = new google.maps.LatLngBounds();
+    
+    try {
+      // Geocode pickup location
+      const pickupResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+        geocoder.geocode({ address: pickupLocation }, (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Failed to geocode pickup location: ${status}`));
+          }
+        });
+      });
+
+      // Geocode dropoff location
+      const dropoffResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+        geocoder.geocode({ address: dropoffLocation }, (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Failed to geocode dropoff location: ${status}`));
+          }
+        });
+      });
+
+      // Create pickup marker (green)
+      new google.maps.Marker({
+        position: pickupResult.geometry.location,
+        map: mapInstance,
+        title: 'Pickup Location',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: '#10B981',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3,
+        },
+      });
+
+      // Create dropoff marker (red)
+      new google.maps.Marker({
+        position: dropoffResult.geometry.location,
+        map: mapInstance,
+        title: 'Dropoff Location',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: '#EF4444',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3,
+        },
+      });
+
+      // Extend bounds to include both locations
+      bounds.extend(pickupResult.geometry.location);
+      bounds.extend(dropoffResult.geometry.location);
+
+      // Fit map to show both markers
+      mapInstance.fitBounds(bounds, {
+        top: 80,
+        bottom: 80,
+        left: 80,
+        right: 80
+      });
+
+      setIsLoading(false);
+      return { pickup: pickupResult.geometry.location, dropoff: dropoffResult.geometry.location };
+    } catch (err) {
+      console.error('Geocoding error:', err);
+      throw err;
+    }
+  }, [pickupLocation, dropoffLocation]);
+
   const initializeMap = useCallback(async () => {
     if (!isLoaded || !mapRef.current || !pickupLocation || !dropoffLocation) return;
 
@@ -32,7 +109,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
     try {
       const mapInstance = new google.maps.Map(mapRef.current, {
         zoom: 13,
-        center: { lat: 40.7589, lng: -73.9851 }, // Default to NYC
+        center: { lat: 40.7589, lng: -73.9851 },
         disableDefaultUI: true,
         styles: [
           {
@@ -55,88 +132,47 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
       setMap(mapInstance);
 
-      // Initialize services
-      const directionsService = new google.maps.DirectionsService();
-      const directionsRenderer = new google.maps.DirectionsRenderer({
-        polylineOptions: {
-          strokeColor: '#EAB308', // yellow-500
-          strokeWeight: 4,
-          strokeOpacity: 0.8,
-        },
-        suppressMarkers: true,
-      });
+      // First try to get markers positioned
+      const locations = await geocodeAndShowMarkers(mapInstance);
 
-      directionsRenderer.setMap(mapInstance);
+      // Try to get directions, but don't fail if it doesn't work
+      try {
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+          polylineOptions: {
+            strokeColor: '#EAB308',
+            strokeWeight: 4,
+            strokeOpacity: 0.8,
+          },
+          suppressMarkers: true, // We already have custom markers
+        });
 
-      // Calculate and display route
-      const request: google.maps.DirectionsRequest = {
-        origin: pickupLocation,
-        destination: dropoffLocation,
-        travelMode: google.maps.TravelMode.DRIVING,
-      };
+        directionsRenderer.setMap(mapInstance);
 
-      directionsService.route(request, (result, status) => {
-        if (status === 'OK' && result) {
-          directionsRenderer.setDirections(result);
-          
-          // Get route information
-          const route = result.routes[0];
-          const leg = route.legs[0];
-          
-          // Create custom pickup marker (green)
-          new google.maps.Marker({
-            position: leg.start_location,
-            map: mapInstance,
-            title: 'Pickup Location',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 12,
-              fillColor: '#10B981', // green-500
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 3,
-            },
-          });
-          
-          // Create custom dropoff marker (red)
-          new google.maps.Marker({
-            position: leg.end_location,
-            map: mapInstance,
-            title: 'Dropoff Location',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 12,
-              fillColor: '#EF4444', // red-500
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 3,
-            },
-          });
+        const request: google.maps.DirectionsRequest = {
+          origin: locations.pickup,
+          destination: locations.dropoff,
+          travelMode: google.maps.TravelMode.DRIVING,
+        };
 
-          // Fit map to show both markers and route with proper padding
-          const bounds = new google.maps.LatLngBounds();
-          bounds.extend(leg.start_location);
-          bounds.extend(leg.end_location);
-          mapInstance.fitBounds(bounds, {
-            top: 50,
-            bottom: 50,
-            left: 50,
-            right: 50
-          });
-          
-          setIsLoading(false);
-        } else {
-          console.error('Directions request failed:', status);
-          setError('Unable to calculate route');
-          setIsLoading(false);
-        }
-      });
+        directionsService.route(request, (result, status) => {
+          if (status === 'OK' && result) {
+            directionsRenderer.setDirections(result);
+            console.log('Route successfully displayed');
+          } else {
+            console.warn('Directions API failed, but markers are still visible:', status);
+          }
+        });
+      } catch (directionsError) {
+        console.warn('Could not load route, but markers are displayed:', directionsError);
+      }
+
     } catch (err) {
       console.error('Map initialization error:', err);
-      setError('Failed to load map');
+      setError('Failed to load locations on map');
       setIsLoading(false);
     }
-  }, [isLoaded, pickupLocation, dropoffLocation]);
+  }, [isLoaded, pickupLocation, dropoffLocation, geocodeAndShowMarkers]);
 
   useEffect(() => {
     if (isOpen) {
@@ -185,7 +221,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
             <div className="absolute inset-0 flex items-center justify-center bg-slate-800 z-10">
               <div className="text-center">
                 <div className="w-8 h-8 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-white">Loading route...</p>
+                <p className="text-white">Loading locations...</p>
               </div>
             </div>
           )}
@@ -196,7 +232,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
                 <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                   <X className="w-6 h-6 text-red-500" />
                 </div>
-                <p className="text-white text-lg font-semibold mb-2">Route Error</p>
+                <p className="text-white text-lg font-semibold mb-2">Location Error</p>
                 <p className="text-slate-300">{error}</p>
               </div>
             </div>
