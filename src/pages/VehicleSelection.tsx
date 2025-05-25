@@ -85,7 +85,8 @@ const VehicleSelection = () => {
   };
 
   // Check if both locations are selected
-  const canShowRoute = bookingData.pickupLocation && bookingData.dropoffLocation;
+  const canShowRoute =
+    bookingData.pickupLocation && bookingData.dropoffLocation;
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -110,15 +111,15 @@ const VehicleSelection = () => {
 
       <div className="px-4 space-y-6">
         {/* Location Inputs */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
+        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 relative overflow-visible">
           <h2 className="text-lg font-semibold text-white mb-4">
             Trip Details
           </h2>
 
-          <div className="relative mb-6">
+          <div className="relative mb-6 overflow-visible">
             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
 
-            <div className="relative z-10 mb-4">
+            <div className="relative z-30 mb-8">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
                 <div className="w-2 h-2 bg-black rounded-full"></div>
               </div>
@@ -134,7 +135,7 @@ const VehicleSelection = () => {
               </div>
             </div>
 
-            <div className="relative z-10">
+            <div className="relative z-20">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 border-yellow-500 bg-slate-900"></div>
               <div className="ml-12">
                 <LocationPicker
