@@ -1,14 +1,17 @@
+
 import React, { useState, useRef, useEffect } from "react";
-import { MapPin, X } from "lucide-react";
+import { MapPin, X, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGoogleMapsApi } from "@/hooks/useGoogleMapsApi";
+import { useToast } from "@/hooks/use-toast";
 
 interface LocationPickerProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  showCurrentLocation?: boolean;
 }
 
 interface Prediction {
@@ -25,20 +28,25 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
   placeholder,
+  showCurrentLocation = false,
 }) => {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const autocompleteService =
     useRef<google.maps.places.AutocompleteService | null>(null);
+  const geocoder = useRef<google.maps.Geocoder | null>(null);
   const { isLoaded } = useGoogleMapsApi();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   // Initialize the autocomplete service when Google Maps is loaded
   useEffect(() => {
     if (isLoaded && window.google?.maps?.places?.AutocompleteService) {
       autocompleteService.current =
         new window.google.maps.places.AutocompleteService();
+      geocoder.current = new window.google.maps.Geocoder();
     }
   }, [isLoaded]);
 
@@ -81,6 +89,65 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     inputRef.current?.blur();
   };
 
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Geolocation not supported",
+        description: "Your browser doesn't support geolocation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        if (geocoder.current) {
+          geocoder.current.geocode(
+            { location: { lat: latitude, lng: longitude } },
+            (results, status) => {
+              setIsGettingLocation(false);
+              if (status === 'OK' && results?.[0]) {
+                onChange(results[0].formatted_address);
+                toast({
+                  title: "Location found",
+                  description: "Current location has been set",
+                });
+              } else {
+                // Fallback to coordinates if geocoding fails
+                onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+                toast({
+                  title: "Location found",
+                  description: "Current location coordinates have been set",
+                });
+              }
+            }
+          );
+        } else {
+          // Fallback if no geocoder
+          setIsGettingLocation(false);
+          onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          toast({
+            title: "Location found",
+            description: "Current location coordinates have been set",
+          });
+        }
+      },
+      (error) => {
+        setIsGettingLocation(false);
+        toast({
+          title: "Location error",
+          description: "Unable to get your current location",
+          variant: "destructive",
+        });
+        console.error('Error getting location:', error);
+      }
+    );
+  };
+
   const clearInput = () => {
     onChange("");
     setPredictions([]);
@@ -113,43 +180,59 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
             placeholder={placeholder}
-            className="bg-slate-800 border-slate-700 text-white pl-12 pr-12 h-14 text-lg"
+            className="bg-slate-800 border-slate-700 text-white pl-12 pr-20 h-14 text-lg"
           />
           <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-yellow-500 w-5 h-5" />
 
-          {value && (
-            <Button
-              type="button"
-              onClick={clearInput}
-              variant="ghost"
-              size="sm"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+            {showCurrentLocation && (
+              <Button
+                type="button"
+                onClick={getCurrentLocation}
+                disabled={isGettingLocation}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+                title="Use current location"
+              >
+                <Navigation className={`w-4 h-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+            
+            {value && (
+              <Button
+                type="button"
+                onClick={clearInput}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Autocomplete Predictions Dropdown */}
         {showPredictions && (predictions.length > 0 || isLoading) && (
-          <div className="absolute top-full left-0 right-0 z-[99999] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl max-h-80 overflow-y-auto">
+          <div className="fixed inset-x-4 top-auto z-[9999] mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl backdrop-blur-sm max-h-80 overflow-y-auto">
             {isLoading && (
-              <div className="p-4 text-gray-600 text-center">Searching...</div>
+              <div className="p-4 text-slate-300 text-center">Searching...</div>
             )}
 
             {predictions.map((prediction) => (
               <div
                 key={prediction.place_id}
                 onClick={() => handlePredictionSelect(prediction)}
-                className="p-4 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0 transition-colors"
+                className="p-4 hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0 transition-colors"
               >
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
+                    <div className="font-medium text-white truncate">
                       {prediction.structured_formatting.main_text}
                     </div>
-                    <div className="text-sm text-gray-600 truncate">
+                    <div className="text-sm text-slate-400 truncate">
                       {prediction.structured_formatting.secondary_text}
                     </div>
                   </div>

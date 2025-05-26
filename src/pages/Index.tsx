@@ -1,11 +1,23 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Users, ChevronRight, Star, Shield, Zap } from 'lucide-react';
+import { Route, Users, ChevronRight, Star, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { updateBookingData } = useBookingFlow();
+
+  const handleSingleTrip = () => {
+    updateBookingData({ serviceType: 'Single Trip' });
+    navigate('/vehicles');
+  };
+
+  const handleMultipleTrip = () => {
+    updateBookingData({ serviceType: 'Multiple Trip' });
+    navigate('/vehicles');
+  };
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
@@ -57,24 +69,24 @@ const Index = () => {
 
         {/* Service Options */}
         <div className="space-y-4 mb-6">
-          <div onClick={() => navigate('/vehicles')} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
+          <div onClick={handleSingleTrip} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
             <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center mr-4">
-              <Clock className="w-6 h-6 text-black" />
+              <Route className="w-6 h-6 text-black" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-bold text-lg">Book for later</h3>
-              <p className="text-slate-400">Schedule a premium ride</p>
+              <h3 className="text-white font-bold text-lg">Single Trip</h3>
+              <p className="text-slate-400">Point to point transportation</p>
             </div>
             <ChevronRight className="w-6 h-6 text-yellow-500" />
           </div>
           
-          <div onClick={() => navigate('/vehicles')} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
+          <div onClick={handleMultipleTrip} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
             <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center mr-4">
               <Users className="w-6 h-6 text-black" />
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-bold text-lg">Guest booking</h3>
-              <p className="text-slate-400">Book for someone else</p>
+              <h3 className="text-white font-bold text-lg">Multiple Trip</h3>
+              <p className="text-slate-400">Multiple stops journey</p>
             </div>
             <ChevronRight className="w-6 h-6 text-yellow-500" />
           </div>

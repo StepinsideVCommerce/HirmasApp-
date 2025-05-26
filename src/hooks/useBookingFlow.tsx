@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 export interface BookingData {
   pickupLocation: string;
   dropoffLocation: string;
+  firstStopLocation?: string;
   guestName: string;
   phoneNumber: string;
   guestCategory: string;
@@ -31,6 +32,7 @@ export const useBookingFlow = () => {
     return {
       pickupLocation: '',
       dropoffLocation: '',
+      firstStopLocation: '',
       guestName: '',
       phoneNumber: '',
       guestCategory: 'other',
@@ -62,6 +64,7 @@ export const useBookingFlow = () => {
     const initialData = {
       pickupLocation: '',
       dropoffLocation: '',
+      firstStopLocation: '',
       guestName: '',
       phoneNumber: '',
       guestCategory: 'other',

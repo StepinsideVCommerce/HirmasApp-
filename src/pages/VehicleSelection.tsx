@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Car, Map } from "lucide-react";
+import { ArrowLeft, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 import { useToast } from "@/hooks/use-toast";
 import LocationPicker from "@/components/LocationPicker";
 import RouteMapModal from "@/components/RouteMapModal";
+import VehicleCarousel from "@/components/VehicleCarousel";
 
 const VehicleSelection = () => {
   const navigate = useNavigate();
@@ -29,30 +31,56 @@ const VehicleSelection = () => {
     {
       id: "luxury-sedan",
       name: "Luxury Sedan",
-      description: "Mercedes S-Class or equivalent",
-      image: "",
+      description: "Premium comfort for business travel",
       eta: "3-5 min",
     },
     {
       id: "suv",
-      name: "Premium SUV",
-      description: "BMW X7 or equivalent",
-      image: "",
+      name: "SUV",
+      description: "Spacious and comfortable for families",
       eta: "5-8 min",
     },
     {
-      id: "minibus",
-      name: "Executive Minibus",
-      description: "Mercedes Sprinter - Up to 12 passengers",
-      image: "",
+      id: "vip-bus-28",
+      name: "VIP Bus 28 Seaters",
+      description: "Luxury group transportation",
+      eta: "15-20 min",
+    },
+    {
+      id: "mercedes-sprinter",
+      name: "Mercedes Sprinter Bus",
+      description: "Premium group travel experience",
+      eta: "12-15 min",
+    },
+    {
+      id: "shuttle-bus-18",
+      name: "18 Seaters Shuttle Bus",
+      description: "Comfortable medium group transport",
+      eta: "10-15 min",
+    },
+    {
+      id: "hiace-10",
+      name: "10 Seaters Hiace",
+      description: "Reliable group transportation",
       eta: "8-12 min",
     },
     {
-      id: "other",
-      name: "Custom Request",
-      description: "Special vehicle requirements",
-      image: "",
-      eta: "On request",
+      id: "staria-mercedes",
+      name: "Staria Mercedes",
+      description: "Modern luxury van",
+      eta: "6-10 min",
+    },
+    {
+      id: "vito-bus-5",
+      name: "Vito Bus 5 Seaters",
+      description: "Compact luxury transport",
+      eta: "5-8 min",
+    },
+    {
+      id: "normal-sedan",
+      name: "Normal Sedan",
+      description: "Economical and reliable transport",
+      eta: "3-5 min",
     },
   ];
 
@@ -84,9 +112,12 @@ const VehicleSelection = () => {
     navigate("/user-info");
   };
 
-  // Check if both locations are selected
-  const canShowRoute =
-    bookingData.pickupLocation && bookingData.dropoffLocation;
+  const isMultipleTrip = bookingData.serviceType === 'Multiple Trip';
+  
+  // Check if locations are selected (for multiple trip, check all locations)
+  const canShowRoute = isMultipleTrip 
+    ? bookingData.pickupLocation && bookingData.firstStopLocation && bookingData.dropoffLocation
+    : bookingData.pickupLocation && bookingData.dropoffLocation;
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -113,15 +144,14 @@ const VehicleSelection = () => {
         {/* Location Inputs */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 relative overflow-visible">
           <h2 className="text-lg font-semibold text-white mb-4">
-            Trip Details
+            Trip Details - {bookingData.serviceType || 'Single Trip'}
           </h2>
 
           <div className="relative mb-6 overflow-visible">
-            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
-
+            {/* From Location */}
             <div className="relative z-30 mb-8">
-              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-                <div className="w-2 h-2 bg-black rounded-full"></div>
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
               <div className="ml-12">
                 <LocationPicker
@@ -131,12 +161,40 @@ const VehicleSelection = () => {
                     updateBookingData({ pickupLocation: value })
                   }
                   placeholder="Enter pickup location"
+                  showCurrentLocation={true}
                 />
               </div>
             </div>
 
-            <div className="relative z-20">
-              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 border-yellow-500 bg-slate-900"></div>
+            {/* Multiple Trip: First Stop */}
+            {isMultipleTrip && (
+              <div className="relative z-20 mb-8">
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div className="ml-12">
+                  <LocationPicker
+                    label="First Stop"
+                    value={bookingData.firstStopLocation || ''}
+                    onChange={(value) =>
+                      updateBookingData({ firstStopLocation: value })
+                    }
+                    placeholder="Enter first stop location"
+                    showCurrentLocation={true}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Connection line for single trip or to final destination */}
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
+
+            {/* To Location */}
+            <div className="relative z-10">
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
               <div className="ml-12">
                 <LocationPicker
                   label="To"
@@ -145,6 +203,7 @@ const VehicleSelection = () => {
                     updateBookingData({ dropoffLocation: value })
                   }
                   placeholder="Enter destination"
+                  showCurrentLocation={true}
                 />
               </div>
             </div>
@@ -165,63 +224,17 @@ const VehicleSelection = () => {
           )}
         </div>
 
-        {/* Vehicle Selection */}
+        {/* Vehicle Selection Carousel */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-6">
             Choose your vehicle
           </h2>
-
-          <div className="grid gap-4">
-            {vehicles.map((vehicle) => (
-              <div
-                key={vehicle.id}
-                onClick={() => handleVehicleSelect(vehicle.id)}
-                className={`relative overflow-hidden group cursor-pointer p-6 rounded-xl transition-all duration-300 ${
-                  selectedVehicle === vehicle.id
-                    ? "bg-yellow-500/20 border-2 border-yellow-500 shadow-lg shadow-yellow-500/20"
-                    : "bg-slate-700 hover:bg-slate-600 border-2 border-transparent"
-                }`}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-slate-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Car className="w-12 h-12 text-yellow-500" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-white">
-                      {vehicle.name}
-                    </h3>
-                    <p className="text-slate-300">{vehicle.description}</p>
-
-                    <div className="flex items-center mt-3">
-                      <div className="flex items-center text-slate-400">
-                        <Clock className="w-4 h-4 mr-1" />
-                        <span>{vehicle.eta}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedVehicle === vehicle.id && (
-                  <div className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-black"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          
+          <VehicleCarousel
+            vehicles={vehicles}
+            selectedVehicle={selectedVehicle}
+            onVehicleSelect={handleVehicleSelect}
+          />
         </div>
 
         {/* Continue Button */}
@@ -230,7 +243,8 @@ const VehicleSelection = () => {
           disabled={
             !selectedVehicle ||
             !bookingData.pickupLocation ||
-            !bookingData.dropoffLocation
+            !bookingData.dropoffLocation ||
+            (isMultipleTrip && !bookingData.firstStopLocation)
           }
           className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity disabled:opacity-50 mb-6"
         >
@@ -244,6 +258,8 @@ const VehicleSelection = () => {
         onClose={() => setIsRouteMapOpen(false)}
         pickupLocation={bookingData.pickupLocation}
         dropoffLocation={bookingData.dropoffLocation}
+        firstStopLocation={bookingData.firstStopLocation}
+        isMultipleTrip={isMultipleTrip}
       />
     </div>
   );
