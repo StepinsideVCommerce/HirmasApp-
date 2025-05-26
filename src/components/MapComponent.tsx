@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { Search, MapPin, AlertCircle } from "lucide-react";
@@ -10,12 +9,17 @@ import { useGoogleMapsApi } from "@/hooks/useGoogleMapsApi";
 interface MapComponentProps {
   pickupLocation?: string;
   dropoffLocation?: string;
+  firstStopLocation?: string;
+  secondFromLocation?: string;
+  isMultipleTrip?: boolean;
 }
 
 interface MarkerData {
   lat: number;
   lng: number;
   title: string;
+  type?: "pickup" | "secondFrom" | "firstStop" | "dropoff" | "search";
+  color?: string;
 }
 
 const mapContainerStyle = {
@@ -32,6 +36,9 @@ const defaultCenter = {
 const MapComponent: React.FC<MapComponentProps> = ({
   pickupLocation,
   dropoffLocation,
+  firstStopLocation,
+  secondFromLocation,
+  isMultipleTrip = false,
 }) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -39,6 +46,22 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { isLoaded, isLoading: apiLoading, apiKey, error } = useGoogleMapsApi();
+
+  // Get marker color based on type
+  const getMarkerColor = (type?: string) => {
+    switch (type) {
+      case "pickup":
+      case "secondFrom":
+        return "#10B981"; // Green for pickup locations
+      case "firstStop":
+        return "#8B5CF6"; // Purple for intermediate stops
+      case "dropoff":
+        return "#EF4444"; // Red for final destination
+      case "search":
+      default:
+        return "#3B82F6"; // Blue for search results
+    }
+  };
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -86,6 +109,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
           lat: match.lat,
           lng: match.lng,
           title: match.title,
+          type: "search",
+          color: getMarkerColor("search"),
         };
 
         setMarkers((prev) => [...prev, newMarker]);
@@ -100,6 +125,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
           lat: 40.7589 + (Math.random() - 0.5) * 0.1,
           lng: -73.9851 + (Math.random() - 0.5) * 0.1,
           title: `Demo: ${location}`,
+          type: "search",
+          color: getMarkerColor("search"),
         };
 
         setMarkers((prev) => [...prev, genericLocation]);
@@ -167,6 +194,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
         lat,
         lng,
         title: result.formatted_address || location,
+        type: "search",
+        color: getMarkerColor("search"),
       };
 
       setMarkers((prev) => [...prev, newMarker]);
@@ -293,9 +322,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         <SearchControls />
         <div className="text-center p-6">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-white text-lg font-semibold mb-2">
-            Map Error
-          </h3>
+          <h3 className="text-white text-lg font-semibold mb-2">Map Error</h3>
           <p className="text-slate-300 text-sm">{error}</p>
         </div>
       </div>
@@ -371,6 +398,14 @@ const MapComponent: React.FC<MapComponentProps> = ({
             key={index}
             position={{ lat: marker.lat, lng: marker.lng }}
             title={marker.title}
+            icon={{
+              path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
+              scale: 12,
+              fillColor: marker.color || "#3B82F6",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 3,
+            }}
           />
         ))}
       </GoogleMap>

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import VehicleSelection from "./pages/VehicleSelection";
+import MultipleTrip from "./pages/MultipleTrip";
 import UserInfo from "./pages/UserInfo";
 import ReviewConfirm from "./pages/ReviewConfirm";
 import DriverSearch from "./pages/DriverSearch";
@@ -24,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/vehicles" element={<VehicleSelection />} />
+            <Route path="/multiple-trip" element={<MultipleTrip />} />
             <Route path="/user-info" element={<UserInfo />} />
             <Route path="/review" element={<ReviewConfirm />} />
             <Route path="/searching" element={<DriverSearch />} />

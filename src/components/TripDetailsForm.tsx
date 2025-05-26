@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { Map } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import LocationPicker from '@/components/LocationPicker';
-import { BookingData } from '@/hooks/useBookingFlow';
+import React from "react";
+import { Map } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import LocationPicker from "@/components/LocationPicker";
+import { BookingData } from "@/hooks/useBookingFlow";
 
 interface TripDetailsFormProps {
   bookingData: BookingData;
@@ -16,58 +15,41 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
   updateBookingData,
   onShowRoute,
 }) => {
-  const isMultipleTrip = bookingData.serviceType === 'Multiple Trip';
-  
+  const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
+
   // Check if locations are selected (for multiple trip, check all locations)
-  const canShowRoute = isMultipleTrip 
-    ? bookingData.pickupLocation && bookingData.secondFromLocation && bookingData.firstStopLocation && bookingData.dropoffLocation
+  const canShowRoute = isMultipleTrip
+    ? bookingData.pickupLocation &&
+      bookingData.firstStopLocation &&
+      bookingData.dropoffLocation
     : bookingData.pickupLocation && bookingData.dropoffLocation;
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 relative overflow-visible">
       <h2 className="text-lg font-semibold text-white mb-4">
-        Trip Details - {bookingData.serviceType || 'Single Trip'}
+        Trip Details - {bookingData.serviceType || "Single Trip"}
       </h2>
 
       <div className="relative mb-6 overflow-visible">
-        {/* First From Location */}
+        {/* From Location */}
         <div className="relative z-30 mb-8">
           <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
           <div className="ml-12">
             <LocationPicker
-              label="From (1st Location)"
+              label={isMultipleTrip ? "From (Pickup Location)" : "From"}
               value={bookingData.pickupLocation}
-              onChange={(value) =>
-                updateBookingData({ pickupLocation: value })
+              onChange={(value) => updateBookingData({ pickupLocation: value })}
+              placeholder={
+                isMultipleTrip
+                  ? "Enter pickup location"
+                  : "Enter pickup location"
               }
-              placeholder="Enter first pickup location"
               showCurrentLocation={true}
             />
           </div>
         </div>
-
-        {/* Multiple Trip: Second From Location */}
-        {isMultipleTrip && (
-          <div className="relative z-25 mb-8">
-            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
-            <div className="ml-12">
-              <LocationPicker
-                label="From (2nd Location)"
-                value={bookingData.secondFromLocation || ''}
-                onChange={(value) =>
-                  updateBookingData({ secondFromLocation: value })
-                }
-                placeholder="Enter second pickup location"
-                showCurrentLocation={true}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Multiple Trip: First Stop */}
         {isMultipleTrip && (
@@ -78,8 +60,8 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
             </div>
             <div className="ml-12">
               <LocationPicker
-                label="First Stop"
-                value={bookingData.firstStopLocation || ''}
+                label="To (First Stop)"
+                value={bookingData.firstStopLocation || ""}
                 onChange={(value) =>
                   updateBookingData({ firstStopLocation: value })
                 }
@@ -100,12 +82,16 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
           </div>
           <div className="ml-12">
             <LocationPicker
-              label="To"
+              label={
+                isMultipleTrip ? "To (Second Stop - Final Destination)" : "To"
+              }
               value={bookingData.dropoffLocation}
               onChange={(value) =>
                 updateBookingData({ dropoffLocation: value })
               }
-              placeholder="Enter destination"
+              placeholder={
+                isMultipleTrip ? "Enter final destination" : "Enter destination"
+              }
               showCurrentLocation={true}
             />
           </div>

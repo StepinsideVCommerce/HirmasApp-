@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 import RouteMapModal from "@/components/RouteMapModal";
@@ -86,7 +85,7 @@ const VehicleSelection = () => {
     updateBookingData({ carType: vehicleId });
   };
 
-  const isMultipleTrip = bookingData.serviceType === 'Multiple Trip';
+  const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -117,7 +116,7 @@ const VehicleSelection = () => {
         pickupLocation={bookingData.pickupLocation}
         dropoffLocation={bookingData.dropoffLocation}
         firstStopLocation={bookingData.firstStopLocation}
-        secondFromLocation={bookingData.secondFromLocation}
+        secondFromLocation=""
         isMultipleTrip={isMultipleTrip}
       />
     </div>

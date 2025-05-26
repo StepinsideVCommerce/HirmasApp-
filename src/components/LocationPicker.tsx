@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { MapPin, X, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +50,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   }, [isLoaded]);
 
   const handleInputChange = (inputValue: string) => {
+    console.log("LocationPicker - handleInputChange:", { label, inputValue });
     onChange(inputValue);
 
     if (!autocompleteService.current || !inputValue.trim()) {
@@ -83,6 +83,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const handlePredictionSelect = (prediction: Prediction) => {
+    console.log("LocationPicker - handlePredictionSelect:", {
+      label,
+      value: prediction.description,
+    });
     onChange(prediction.description);
     setPredictions([]);
     setShowPredictions(false);
@@ -104,13 +108,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        
+
         if (geocoder.current) {
           geocoder.current.geocode(
             { location: { lat: latitude, lng: longitude } },
             (results, status) => {
               setIsGettingLocation(false);
-              if (status === 'OK' && results?.[0]) {
+              if (status === "OK" && results?.[0]) {
                 onChange(results[0].formatted_address);
                 toast({
                   title: "Location found",
@@ -143,7 +147,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           description: "Unable to get your current location",
           variant: "destructive",
         });
-        console.error('Error getting location:', error);
+        console.error("Error getting location:", error);
       }
     );
   };
@@ -195,10 +199,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 className="h-8 w-8 p-0 text-slate-400 hover:text-white hover:bg-slate-700"
                 title="Use current location"
               >
-                <Navigation className={`w-4 h-4 ${isGettingLocation ? 'animate-spin' : ''}`} />
+                <Navigation
+                  className={`w-4 h-4 ${
+                    isGettingLocation ? "animate-spin" : ""
+                  }`}
+                />
               </Button>
             )}
-            
+
             {value && (
               <Button
                 type="button"

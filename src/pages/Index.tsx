@@ -1,22 +1,21 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Route, Users, ChevronRight, Star, Shield, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useBookingFlow } from '@/hooks/useBookingFlow';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Route, Users, ChevronRight, Star, Shield, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useBookingFlow } from "@/hooks/useBookingFlow";
 
 const Index = () => {
   const navigate = useNavigate();
   const { updateBookingData } = useBookingFlow();
 
   const handleSingleTrip = () => {
-    updateBookingData({ serviceType: 'Single Trip' });
-    navigate('/vehicles');
+    updateBookingData({ serviceType: "Single Trip" });
+    navigate("/vehicles");
   };
 
   const handleMultipleTrip = () => {
-    updateBookingData({ serviceType: 'Multiple Trip' });
-    navigate('/vehicles');
+    updateBookingData({ serviceType: "Multiple Trip" });
+    navigate("/multiple-trip");
   };
 
   return (
@@ -24,12 +23,12 @@ const Index = () => {
       {/* Hero Section */}
       <div className="relative w-full h-2/3 bg-gradient-to-br from-slate-800 via-slate-900 to-black flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50"></div>
-        
+
         {/* Floating Elements */}
         <div className="absolute top-20 left-10 w-4 h-4 bg-yellow-500 rounded-full animate-pulse"></div>
         <div className="absolute top-40 right-16 w-6 h-6 bg-yellow-500/30 rounded-full animate-bounce"></div>
         <div className="absolute bottom-40 left-20 w-3 h-3 bg-yellow-500/50 rounded-full animate-ping"></div>
-        
+
         <div className="relative z-10 text-center px-6">
           <div className="mb-8">
             <div className="w-24 h-24 mx-auto mb-6 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -42,7 +41,7 @@ const Index = () => {
               Experience luxury transportation with our premium fleet
             </p>
           </div>
-          
+
           {/* Feature Cards */}
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 text-center">
@@ -64,12 +63,17 @@ const Index = () => {
       {/* Bottom Sheet */}
       <div className="relative flex-1 bg-slate-900 rounded-t-3xl -mt-6 z-10 px-4 pt-6">
         <div className="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full"></div>
-        
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Choose Your Service</h2>
+
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Choose Your Service
+        </h2>
 
         {/* Service Options */}
         <div className="space-y-4 mb-6">
-          <div onClick={handleSingleTrip} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
+          <div
+            onClick={handleSingleTrip}
+            className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]"
+          >
             <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center mr-4">
               <Route className="w-6 h-6 text-black" />
             </div>
@@ -79,8 +83,11 @@ const Index = () => {
             </div>
             <ChevronRight className="w-6 h-6 text-yellow-500" />
           </div>
-          
-          <div onClick={handleMultipleTrip} className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]">
+
+          <div
+            onClick={handleMultipleTrip}
+            className="flex items-center bg-gradient-to-r from-slate-800 to-slate-700 p-6 rounded-xl cursor-pointer hover:from-slate-700 hover:to-slate-600 transition-all duration-300 transform hover:scale-[1.02]"
+          >
             <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center mr-4">
               <Users className="w-6 h-6 text-black" />
             </div>

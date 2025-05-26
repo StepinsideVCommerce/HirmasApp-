@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface BookingData {
   pickupLocation: string;
@@ -17,7 +16,7 @@ export interface BookingData {
   passengerCount: number;
 }
 
-const STORAGE_KEY = 'booking-data';
+const STORAGE_KEY = "booking-data";
 
 export const useBookingFlow = () => {
   // Initialize with data from localStorage if available
@@ -27,22 +26,22 @@ export const useBookingFlow = () => {
       try {
         return JSON.parse(stored);
       } catch (error) {
-        console.error('Error parsing stored booking data:', error);
+        console.error("Error parsing stored booking data:", error);
       }
     }
     return {
-      pickupLocation: '',
-      dropoffLocation: '',
-      firstStopLocation: '',
-      secondFromLocation: '',
-      guestName: '',
-      phoneNumber: '',
-      guestCategory: 'other',
-      carType: '',
-      serviceType: 'Single Trip',
+      pickupLocation: "",
+      dropoffLocation: "",
+      firstStopLocation: "",
+      secondFromLocation: "",
+      guestName: "",
+      phoneNumber: "",
+      guestCategory: "other",
+      carType: "",
+      serviceType: "Single Trip",
       useGPS: false,
-      pickupDate: '',
-      pickupTime: '',
+      pickupDate: "",
+      pickupTime: "",
       passengerCount: 1,
     };
   });
@@ -50,32 +49,46 @@ export const useBookingFlow = () => {
   // Save to localStorage whenever bookingData changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookingData));
-    console.log('Booking data updated:', bookingData);
+    console.log("Booking data updated:", bookingData);
   }, [bookingData]);
 
+  // Clear localStorage on page refresh/unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem(STORAGE_KEY);
+      console.log("Local storage cleared on page refresh");
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   const updateBookingData = (updates: Partial<BookingData>) => {
-    setBookingData(prev => {
+    setBookingData((prev) => {
       const newData = { ...prev, ...updates };
-      console.log('Updating booking data with:', updates);
-      console.log('New booking data:', newData);
+      console.log("Updating booking data with:", updates);
+      console.log("New booking data:", newData);
       return newData;
     });
   };
 
   const clearBookingData = () => {
     const initialData = {
-      pickupLocation: '',
-      dropoffLocation: '',
-      firstStopLocation: '',
-      secondFromLocation: '',
-      guestName: '',
-      phoneNumber: '',
-      guestCategory: 'other',
-      carType: '',
-      serviceType: 'Single Trip',
+      pickupLocation: "",
+      dropoffLocation: "",
+      firstStopLocation: "",
+      secondFromLocation: "",
+      guestName: "",
+      phoneNumber: "",
+      guestCategory: "other",
+      carType: "",
+      serviceType: "Single Trip",
       useGPS: false,
-      pickupDate: '',
-      pickupTime: '',
+      pickupDate: "",
+      pickupTime: "",
       passengerCount: 1,
     };
     setBookingData(initialData);

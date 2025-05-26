@@ -1,11 +1,19 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Phone, Users, Crown, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useBookingFlow } from '@/hooks/useBookingFlow';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  User,
+  Phone,
+  Users,
+  Crown,
+  Briefcase,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useBookingFlow } from "@/hooks/useBookingFlow";
+import { useToast } from "@/hooks/use-toast";
 
 const UserInfo = () => {
   const navigate = useNavigate();
@@ -20,10 +28,26 @@ const UserInfo = () => {
   };
 
   const guestCategories = [
-    { value: 'minister', label: 'Minister', icon: <Crown className="w-4 h-4 text-yellow-500" /> },
-    { value: 'ambassador', label: 'Ambassador', icon: <Briefcase className="w-4 h-4 text-yellow-500" /> },
-    { value: 'vip', label: 'VIP Guest', icon: <Crown className="w-4 h-4 text-yellow-500" /> },
-    { value: 'other', label: 'Other', icon: <User className="w-4 h-4 text-yellow-500" /> },
+    {
+      value: "minister",
+      label: "Minister",
+      icon: <Crown className="w-4 h-4 text-yellow-500" />,
+    },
+    {
+      value: "ambassador",
+      label: "Ambassador",
+      icon: <Briefcase className="w-4 h-4 text-yellow-500" />,
+    },
+    {
+      value: "vip",
+      label: "VIP Guest",
+      icon: <Crown className="w-4 h-4 text-yellow-500" />,
+    },
+    {
+      value: "other",
+      label: "Other",
+      icon: <User className="w-4 h-4 text-yellow-500" />,
+    },
   ];
 
   const handleContinue = () => {
@@ -32,32 +56,32 @@ const UserInfo = () => {
       toast({
         title: "Missing Information",
         description: "Please enter guest name",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     if (!bookingData.phoneNumber?.trim()) {
       toast({
-        title: "Missing Information", 
+        title: "Missing Information",
         description: "Please enter phone number",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     // Basic phone validation
     const phoneRegex = /^[\+]?[1-9][\d]{3,14}$/;
-    if (!phoneRegex.test(bookingData.phoneNumber.replace(/\s/g, ''))) {
+    if (!phoneRegex.test(bookingData.phoneNumber.replace(/\s/g, ""))) {
       toast({
         title: "Invalid Phone Number",
         description: "Please enter a valid phone number",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
-    navigate('/review');
+    navigate("/review");
   };
 
   return (
@@ -68,12 +92,12 @@ const UserInfo = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/vehicles')}
+            onClick={() => navigate("/vehicles")}
             className="bg-slate-800/50 backdrop-blur-sm text-white hover:bg-slate-700/50"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          
+
           <div className="text-center">
             <h1 className="text-xl font-bold text-white">Passenger Details</h1>
             <p className="text-slate-400 text-sm">Tell us about your trip</p>
@@ -89,19 +113,54 @@ const UserInfo = () => {
             <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
             Trip Overview
           </h2>
-          
+
           <div className="space-y-3">
+            {/* Pickup Location */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">From:</span>
-              <span className="text-white font-medium text-right flex-1 ml-4 truncate">{bookingData.pickupLocation || 'Not set'}</span>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-slate-400">From:</span>
+              </div>
+              <span className="text-white font-medium text-right flex-1 ml-4 truncate">
+                {bookingData.pickupLocation || "Not set"}
+              </span>
             </div>
+
+            {/* First Stop (only for multiple trips) */}
+            {bookingData.serviceType === "Multiple Trip" && (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                  <span className="text-slate-400">First Stop:</span>
+                </div>
+                <span className="text-white font-medium text-right flex-1 ml-4 truncate">
+                  {bookingData.firstStopLocation || "Not set"}
+                </span>
+              </div>
+            )}
+
+            {/* Final Destination */}
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">To:</span>
-              <span className="text-white font-medium text-right flex-1 ml-4 truncate">{bookingData.dropoffLocation || 'Not set'}</span>
+              <div className="flex items-center">
+                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                <span className="text-slate-400">
+                  {bookingData.serviceType === "Multiple Trip"
+                    ? "Final Destination:"
+                    : "To:"}
+                </span>
+              </div>
+              <span className="text-white font-medium text-right flex-1 ml-4 truncate">
+                {bookingData.dropoffLocation || "Not set"}
+              </span>
             </div>
+
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Vehicle:</span>
-              <span className="text-white font-medium">{bookingData.carType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not selected'}</span>
+              <span className="text-white font-medium">
+                {bookingData.carType
+                  ?.replace("-", " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase()) || "Not selected"}
+              </span>
             </div>
           </div>
         </div>
@@ -114,8 +173,12 @@ const UserInfo = () => {
                 <User className="w-6 h-6 text-black" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Who's traveling?</h2>
-                <p className="text-slate-400 text-sm">Enter passenger details</p>
+                <h2 className="text-xl font-semibold text-white">
+                  Who's traveling?
+                </h2>
+                <p className="text-slate-400 text-sm">
+                  Enter passenger details
+                </p>
               </div>
             </div>
           </div>
@@ -125,42 +188,48 @@ const UserInfo = () => {
             <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
               <Input
                 id="fullName"
-                value={bookingData.guestName || ''}
-                onChange={(e) => updateBookingData({ guestName: e.target.value })}
+                value={bookingData.guestName || ""}
+                onChange={(e) =>
+                  updateBookingData({ guestName: e.target.value })
+                }
                 className="h-14 bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2"
                 placeholder=" "
               />
-              <label 
-                htmlFor="fullName" 
+              <label
+                htmlFor="fullName"
                 className={`absolute left-2 transition-all duration-300 pointer-events-none ${
-                  bookingData.guestName ? 
-                  'text-xs -top-2 text-yellow-500 font-medium' : 
-                  'text-slate-400 top-4 text-lg'
+                  bookingData.guestName
+                    ? "text-xs -top-2 text-yellow-500 font-medium"
+                    : "text-slate-400 top-4 text-lg"
                 }`}
               >
                 Full Name
               </label>
             </div>
           </div>
-          
+
           {/* Phone Number Input */}
           <div className="mb-6">
             <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
-              <div className="absolute left-2 top-4 text-slate-400 font-medium">🇸🇦 +966</div>
+              <div className="absolute left-2 top-4 text-slate-400 font-medium">
+                🇸🇦 +966
+              </div>
               <Input
                 id="phoneNumber"
-                value={bookingData.phoneNumber || ''}
-                onChange={(e) => updateBookingData({ phoneNumber: e.target.value })}
+                value={bookingData.phoneNumber || ""}
+                onChange={(e) =>
+                  updateBookingData({ phoneNumber: e.target.value })
+                }
                 className="h-14 bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-[90px]"
                 placeholder="501234567"
                 type="tel"
               />
-              <label 
-                htmlFor="phoneNumber" 
+              <label
+                htmlFor="phoneNumber"
                 className={`absolute left-[90px] transition-all duration-300 pointer-events-none ${
-                  bookingData.phoneNumber ? 
-                  'text-xs -top-2 text-yellow-500 font-medium' : 
-                  'text-slate-400 opacity-0'
+                  bookingData.phoneNumber
+                    ? "text-xs -top-2 text-yellow-500 font-medium"
+                    : "text-slate-400 opacity-0"
                 }`}
               >
                 Phone Number
@@ -170,20 +239,26 @@ const UserInfo = () => {
 
           {/* Guest Category */}
           <div className="mb-6">
-            <label className="block text-slate-400 mb-3 font-medium">Guest Type</label>
+            <label className="block text-slate-400 mb-3 font-medium">
+              Guest Type
+            </label>
             <div className="grid grid-cols-2 gap-3">
               {guestCategories.map((category) => (
                 <div
                   key={category.value}
-                  onClick={() => updateBookingData({ guestCategory: category.value })}
+                  onClick={() =>
+                    updateBookingData({ guestCategory: category.value })
+                  }
                   className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 ${
                     bookingData.guestCategory === category.value
-                      ? 'bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-2 border-yellow-500 scale-105'
-                      : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
+                      ? "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border-2 border-yellow-500 scale-105"
+                      : "bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent"
                   }`}
                 >
                   {category.icon}
-                  <span className="ml-3 text-white font-medium">{category.label}</span>
+                  <span className="ml-3 text-white font-medium">
+                    {category.label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -191,7 +266,9 @@ const UserInfo = () => {
 
           {/* Passenger Count */}
           <div className="mb-6">
-            <label className="block text-slate-400 mb-3 font-medium">Number of Passengers</label>
+            <label className="block text-slate-400 mb-3 font-medium">
+              Number of Passengers
+            </label>
             <div className="flex items-center justify-center">
               <button
                 onClick={() => handlePassengerCountChange(-1)}
@@ -220,21 +297,25 @@ const UserInfo = () => {
             <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
             Service Details
           </h3>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Service Type:</span>
-              <span className="text-white font-medium">{bookingData.serviceType}</span>
+              <span className="text-white font-medium">
+                {bookingData.serviceType}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Category:</span>
-              <span className="text-white font-medium capitalize">{bookingData.guestCategory}</span>
+              <span className="text-white font-medium capitalize">
+                {bookingData.guestCategory}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Continue Button */}
-        <Button 
+        <Button
           onClick={handleContinue}
           className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity mb-6"
         >

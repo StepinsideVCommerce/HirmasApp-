@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { BookingData } from '@/hooks/useBookingFlow';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { BookingData } from "@/hooks/useBookingFlow";
 
 interface ContinueButtonProps {
   bookingData: BookingData;
@@ -27,8 +26,8 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
       return;
     }
 
-    const isMultipleTrip = bookingData.serviceType === 'Multiple Trip';
-    if (isMultipleTrip && (!bookingData.secondFromLocation || !bookingData.firstStopLocation)) {
+    const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
+    if (isMultipleTrip && !bookingData.firstStopLocation) {
       toast({
         title: "Missing Locations",
         description: "Please enter all required locations for multiple trip",
@@ -49,11 +48,12 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
     navigate("/user-info");
   };
 
-  const isMultipleTrip = bookingData.serviceType === 'Multiple Trip';
-  const isDisabled = !selectedVehicle ||
+  const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
+  const isDisabled =
+    !selectedVehicle ||
     !bookingData.pickupLocation ||
     !bookingData.dropoffLocation ||
-    (isMultipleTrip && (!bookingData.secondFromLocation || !bookingData.firstStopLocation));
+    (isMultipleTrip && !bookingData.firstStopLocation);
 
   return (
     <Button
