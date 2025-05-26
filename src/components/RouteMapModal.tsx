@@ -13,6 +13,12 @@ interface RouteMapModalProps {
   isMultipleTrip?: boolean;
 }
 
+interface LocationsType {
+  pickup: google.maps.LatLng;
+  dropoff?: google.maps.LatLng;
+  firstStop?: google.maps.LatLng;
+}
+
 const RouteMapModal: React.FC<RouteMapModalProps> = ({
   isOpen,
   onClose,
@@ -59,7 +65,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       });
 
       bounds.extend(pickupResult.geometry.location);
-      const locations = { pickup: pickupResult.geometry.location };
+      const locations: LocationsType = { pickup: pickupResult.geometry.location };
 
       // Handle first stop for multiple trips
       if (isMultipleTrip && firstStopLocation) {
@@ -89,7 +95,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
         });
 
         bounds.extend(firstStopResult.geometry.location);
-        Object.assign(locations, { firstStop: firstStopResult.geometry.location });
+        locations.firstStop = firstStopResult.geometry.location;
       }
 
       // Geocode dropoff location
@@ -119,7 +125,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       });
 
       bounds.extend(dropoffResult.geometry.location);
-      Object.assign(locations, { dropoff: dropoffResult.geometry.location });
+      locations.dropoff = dropoffResult.geometry.location;
 
       // Fit map to show all markers
       mapInstance.fitBounds(bounds, {
@@ -188,7 +194,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
         let request: google.maps.DirectionsRequest;
 
-        if (isMultipleTrip && firstStopLocation && locations.firstStop) {
+        if (isMultipleTrip && firstStopLocation && locations.firstStop && locations.dropoff) {
           // Multiple trip route with waypoints
           request = {
             origin: locations.pickup,
@@ -201,13 +207,15 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
             ],
             travelMode: google.maps.TravelMode.DRIVING,
           };
-        } else {
+        } else if (locations.dropoff) {
           // Single trip route
           request = {
             origin: locations.pickup,
             destination: locations.dropoff,
             travelMode: google.maps.TravelMode.DRIVING,
           };
+        } else {
+          throw new Error('Missing dropoff location');
         }
 
         directionsService.route(request, (result, status) => {
