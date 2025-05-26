@@ -66,7 +66,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
                   updateBookingData({ firstStopLocation: value })
                 }
                 placeholder="Enter first stop location"
-                showCurrentLocation={true}
+                showCurrentLocation={false}
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
               placeholder={
                 isMultipleTrip ? "Enter final destination" : "Enter destination"
               }
-              showCurrentLocation={true}
+              showCurrentLocation={false}
             />
           </div>
         </div>

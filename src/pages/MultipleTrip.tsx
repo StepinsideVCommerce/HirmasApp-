@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Map } from "lucide-react";
@@ -160,7 +159,7 @@ const MultipleTrip = () => {
                     updateBookingData({ firstStopLocation: value })
                   }
                   placeholder="Enter first stop location"
-                  showCurrentLocation={true}
+                  showCurrentLocation={false}
                 />
               </div>
             </div>
@@ -178,7 +177,7 @@ const MultipleTrip = () => {
                     updateBookingData({ dropoffLocation: value })
                   }
                   placeholder="Enter final destination"
-                  showCurrentLocation={true}
+                  showCurrentLocation={false}
                 />
               </div>
             </div>
