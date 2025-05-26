@@ -100,6 +100,15 @@ const VehicleSelection = () => {
       return;
     }
 
+    if (isMultipleTrip && (!bookingData.secondFromLocation || !bookingData.firstStopLocation)) {
+      toast({
+        title: "Missing Locations",
+        description: "Please enter all required locations for multiple trip",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!selectedVehicle) {
       toast({
         title: "Selection Required",
@@ -116,7 +125,7 @@ const VehicleSelection = () => {
   
   // Check if locations are selected (for multiple trip, check all locations)
   const canShowRoute = isMultipleTrip 
-    ? bookingData.pickupLocation && bookingData.firstStopLocation && bookingData.dropoffLocation
+    ? bookingData.pickupLocation && bookingData.secondFromLocation && bookingData.firstStopLocation && bookingData.dropoffLocation
     : bookingData.pickupLocation && bookingData.dropoffLocation;
 
   return (
@@ -148,23 +157,44 @@ const VehicleSelection = () => {
           </h2>
 
           <div className="relative mb-6 overflow-visible">
-            {/* From Location */}
+            {/* First From Location */}
             <div className="relative z-30 mb-8">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
               <div className="ml-12">
                 <LocationPicker
-                  label="From"
+                  label="From (1st Location)"
                   value={bookingData.pickupLocation}
                   onChange={(value) =>
                     updateBookingData({ pickupLocation: value })
                   }
-                  placeholder="Enter pickup location"
+                  placeholder="Enter first pickup location"
                   showCurrentLocation={true}
                 />
               </div>
             </div>
+
+            {/* Multiple Trip: Second From Location */}
+            {isMultipleTrip && (
+              <div className="relative z-25 mb-8">
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div className="ml-12">
+                  <LocationPicker
+                    label="From (2nd Location)"
+                    value={bookingData.secondFromLocation || ''}
+                    onChange={(value) =>
+                      updateBookingData({ secondFromLocation: value })
+                    }
+                    placeholder="Enter second pickup location"
+                    showCurrentLocation={true}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Multiple Trip: First Stop */}
             {isMultipleTrip && (
@@ -244,7 +274,7 @@ const VehicleSelection = () => {
             !selectedVehicle ||
             !bookingData.pickupLocation ||
             !bookingData.dropoffLocation ||
-            (isMultipleTrip && !bookingData.firstStopLocation)
+            (isMultipleTrip && (!bookingData.secondFromLocation || !bookingData.firstStopLocation))
           }
           className="w-full h-14 text-lg font-semibold gold-gradient text-black hover:opacity-90 transition-opacity disabled:opacity-50 mb-6"
         >
@@ -259,6 +289,7 @@ const VehicleSelection = () => {
         pickupLocation={bookingData.pickupLocation}
         dropoffLocation={bookingData.dropoffLocation}
         firstStopLocation={bookingData.firstStopLocation}
+        secondFromLocation={bookingData.secondFromLocation}
         isMultipleTrip={isMultipleTrip}
       />
     </div>

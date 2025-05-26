@@ -5,6 +5,7 @@ export interface BookingData {
   pickupLocation: string;
   dropoffLocation: string;
   firstStopLocation?: string;
+  secondFromLocation?: string; // New field for the second from location
   guestName: string;
   phoneNumber: string;
   guestCategory: string;
@@ -33,6 +34,7 @@ export const useBookingFlow = () => {
       pickupLocation: '',
       dropoffLocation: '',
       firstStopLocation: '',
+      secondFromLocation: '',
       guestName: '',
       phoneNumber: '',
       guestCategory: 'other',
@@ -65,6 +67,7 @@ export const useBookingFlow = () => {
       pickupLocation: '',
       dropoffLocation: '',
       firstStopLocation: '',
+      secondFromLocation: '',
       guestName: '',
       phoneNumber: '',
       guestCategory: 'other',

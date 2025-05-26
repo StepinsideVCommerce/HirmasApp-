@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ interface RouteMapModalProps {
   pickupLocation: string;
   dropoffLocation: string;
   firstStopLocation?: string;
+  secondFromLocation?: string;
   isMultipleTrip?: boolean;
 }
 
@@ -17,6 +17,7 @@ interface LocationsType {
   pickup: google.maps.LatLng;
   dropoff?: google.maps.LatLng;
   firstStop?: google.maps.LatLng;
+  secondFrom?: google.maps.LatLng;
 }
 
 const RouteMapModal: React.FC<RouteMapModalProps> = ({
@@ -25,6 +26,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
   pickupLocation,
   dropoffLocation,
   firstStopLocation,
+  secondFromLocation,
   isMultipleTrip = false,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -53,7 +55,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       new google.maps.Marker({
         position: pickupResult.geometry.location,
         map: mapInstance,
-        title: 'Pickup Location',
+        title: 'Pickup Location (1st)',
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 12,
@@ -66,6 +68,37 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
       bounds.extend(pickupResult.geometry.location);
       const locations: LocationsType = { pickup: pickupResult.geometry.location };
+
+      // Handle second from location for multiple trips
+      if (isMultipleTrip && secondFromLocation) {
+        const secondFromResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+          geocoder.geocode({ address: secondFromLocation }, (results, status) => {
+            if (status === 'OK' && results && results.length > 0) {
+              resolve(results[0]);
+            } else {
+              reject(new Error(`Failed to geocode second from location: ${status}`));
+            }
+          });
+        });
+
+        // Create second from marker (green)
+        new google.maps.Marker({
+          position: secondFromResult.geometry.location,
+          map: mapInstance,
+          title: 'Pickup Location (2nd)',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: '#10B981',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+          },
+        });
+
+        bounds.extend(secondFromResult.geometry.location);
+        locations.secondFrom = secondFromResult.geometry.location;
+      }
 
       // Handle first stop for multiple trips
       if (isMultipleTrip && firstStopLocation) {
@@ -141,7 +174,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       console.error('Geocoding error:', err);
       throw err;
     }
-  }, [pickupLocation, dropoffLocation, firstStopLocation, isMultipleTrip]);
+  }, [pickupLocation, dropoffLocation, firstStopLocation, secondFromLocation, isMultipleTrip]);
 
   const initializeMap = useCallback(async () => {
     if (!isLoaded || !mapRef.current || !pickupLocation || !dropoffLocation) return;
@@ -271,6 +304,12 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <span className="text-slate-300 truncate">{pickupLocation}</span>
             </div>
+            {isMultipleTrip && secondFromLocation && (
+              <div className="flex items-center space-x-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-slate-300 truncate">{secondFromLocation}</span>
+              </div>
+            )}
             {isMultipleTrip && firstStopLocation && (
               <div className="flex items-center space-x-2 text-sm">
                 <div className="w-3 h-3 rounded-full bg-purple-500"></div>
