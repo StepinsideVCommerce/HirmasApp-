@@ -9,6 +9,8 @@ interface RouteMapModalProps {
   onClose: () => void;
   pickupLocation: string;
   dropoffLocation: string;
+  firstStopLocation?: string;
+  isMultipleTrip?: boolean;
 }
 
 const RouteMapModal: React.FC<RouteMapModalProps> = ({
@@ -16,6 +18,8 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
   onClose,
   pickupLocation,
   dropoffLocation,
+  firstStopLocation,
+  isMultipleTrip = false,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -39,17 +43,6 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
         });
       });
 
-      // Geocode dropoff location
-      const dropoffResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
-        geocoder.geocode({ address: dropoffLocation }, (results, status) => {
-          if (status === 'OK' && results && results.length > 0) {
-            resolve(results[0]);
-          } else {
-            reject(new Error(`Failed to geocode dropoff location: ${status}`));
-          }
-        });
-      });
-
       // Create pickup marker (green)
       new google.maps.Marker({
         position: pickupResult.geometry.location,
@@ -63,6 +56,51 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
           strokeColor: '#ffffff',
           strokeWeight: 3,
         },
+      });
+
+      bounds.extend(pickupResult.geometry.location);
+      const locations = { pickup: pickupResult.geometry.location };
+
+      // Handle first stop for multiple trips
+      if (isMultipleTrip && firstStopLocation) {
+        const firstStopResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+          geocoder.geocode({ address: firstStopLocation }, (results, status) => {
+            if (status === 'OK' && results && results.length > 0) {
+              resolve(results[0]);
+            } else {
+              reject(new Error(`Failed to geocode first stop location: ${status}`));
+            }
+          });
+        });
+
+        // Create first stop marker (purple)
+        new google.maps.Marker({
+          position: firstStopResult.geometry.location,
+          map: mapInstance,
+          title: 'First Stop',
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: '#8B5CF6',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+          },
+        });
+
+        bounds.extend(firstStopResult.geometry.location);
+        Object.assign(locations, { firstStop: firstStopResult.geometry.location });
+      }
+
+      // Geocode dropoff location
+      const dropoffResult = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+        geocoder.geocode({ address: dropoffLocation }, (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            resolve(results[0]);
+          } else {
+            reject(new Error(`Failed to geocode dropoff location: ${status}`));
+          }
+        });
       });
 
       // Create dropoff marker (red)
@@ -80,11 +118,10 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
         },
       });
 
-      // Extend bounds to include both locations
-      bounds.extend(pickupResult.geometry.location);
       bounds.extend(dropoffResult.geometry.location);
+      Object.assign(locations, { dropoff: dropoffResult.geometry.location });
 
-      // Fit map to show both markers
+      // Fit map to show all markers
       mapInstance.fitBounds(bounds, {
         top: 80,
         bottom: 80,
@@ -93,12 +130,12 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       });
 
       setIsLoading(false);
-      return { pickup: pickupResult.geometry.location, dropoff: dropoffResult.geometry.location };
+      return locations;
     } catch (err) {
       console.error('Geocoding error:', err);
       throw err;
     }
-  }, [pickupLocation, dropoffLocation]);
+  }, [pickupLocation, dropoffLocation, firstStopLocation, isMultipleTrip]);
 
   const initializeMap = useCallback(async () => {
     if (!isLoaded || !mapRef.current || !pickupLocation || !dropoffLocation) return;
@@ -132,10 +169,10 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
       setMap(mapInstance);
 
-      // First try to get markers positioned
+      // Get markers positioned
       const locations = await geocodeAndShowMarkers(mapInstance);
 
-      // Try to get directions, but don't fail if it doesn't work
+      // Try to get directions for the route
       try {
         const directionsService = new google.maps.DirectionsService();
         const directionsRenderer = new google.maps.DirectionsRenderer({
@@ -149,11 +186,29 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
         directionsRenderer.setMap(mapInstance);
 
-        const request: google.maps.DirectionsRequest = {
-          origin: locations.pickup,
-          destination: locations.dropoff,
-          travelMode: google.maps.TravelMode.DRIVING,
-        };
+        let request: google.maps.DirectionsRequest;
+
+        if (isMultipleTrip && firstStopLocation && locations.firstStop) {
+          // Multiple trip route with waypoints
+          request = {
+            origin: locations.pickup,
+            destination: locations.dropoff,
+            waypoints: [
+              {
+                location: locations.firstStop,
+                stopover: true
+              }
+            ],
+            travelMode: google.maps.TravelMode.DRIVING,
+          };
+        } else {
+          // Single trip route
+          request = {
+            origin: locations.pickup,
+            destination: locations.dropoff,
+            travelMode: google.maps.TravelMode.DRIVING,
+          };
+        }
 
         directionsService.route(request, (result, status) => {
           if (status === 'OK' && result) {
@@ -172,7 +227,7 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
       setError('Failed to load locations on map');
       setIsLoading(false);
     }
-  }, [isLoaded, pickupLocation, dropoffLocation, geocodeAndShowMarkers]);
+  }, [isLoaded, pickupLocation, dropoffLocation, geocodeAndShowMarkers, isMultipleTrip, firstStopLocation]);
 
   useEffect(() => {
     if (isOpen) {
@@ -208,6 +263,12 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <span className="text-slate-300 truncate">{pickupLocation}</span>
             </div>
+            {isMultipleTrip && firstStopLocation && (
+              <div className="flex items-center space-x-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                <span className="text-slate-300 truncate">{firstStopLocation}</span>
+              </div>
+            )}
             <div className="flex items-center space-x-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-red-500"></div>
               <span className="text-slate-300 truncate">{dropoffLocation}</span>
