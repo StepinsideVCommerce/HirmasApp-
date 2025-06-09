@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -13,36 +13,43 @@ import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 
 const ReviewConfirm = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { bookingData } = useBookingFlow();
+  const event = location.state?.event;
 
   useEffect(() => {
     console.log("ReviewConfirm page loaded with booking data:", bookingData);
   }, [bookingData]);
 
   const handleConfirm = async () => {
-    console.log("Booking confirmed:", bookingData);
-
-    // Simulate webhook call
+    // Insert into PendingRides
     try {
-      const response = await fetch("https://your-webhook-url.com/booking", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...bookingData,
-          timestamp: new Date().toISOString(),
-          status: "confirmed",
-        }),
-      });
-
-      console.log("Webhook response:", response);
-    } catch (error) {
-      console.error("Webhook error:", error);
+      const { error } = await import("@/integrations/supabase/client").then(
+        ({ hermasAdminSupabase }) =>
+          hermasAdminSupabase.from("PendingRides").insert([
+            {
+              carType: bookingData.carType,
+              hub_id: bookingData.pickupHub?.id,
+              dropOffLocation: bookingData.dropoffLocation,
+              guestCategory: bookingData.guestCategory,
+              guestName: bookingData.guestName,
+              phoneNumber: bookingData.phoneNumber,
+              shift_id: bookingData.shift?.id,
+              pickupTime: bookingData.pickupTime,
+              serviceType: bookingData.serviceType,
+              event_id: event?.id,
+            },
+          ])
+      );
+      if (error) {
+        alert("Booking Failed: " + error.message);
+        return;
+      }
+      navigate("/searching", { state: { event } });
+    } catch (err) {
+      alert("Booking Failed: An unexpected error occurred.");
     }
-
-    navigate("/searching");
   };
 
   return (

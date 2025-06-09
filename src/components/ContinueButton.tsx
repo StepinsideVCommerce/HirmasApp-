@@ -7,11 +7,13 @@ import { BookingData } from "@/hooks/useBookingFlow";
 interface ContinueButtonProps {
   bookingData: BookingData;
   selectedVehicle: string;
+  onContinue?: () => void;
 }
 
 const ContinueButton: React.FC<ContinueButtonProps> = ({
   bookingData,
   selectedVehicle,
+  onContinue,
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,7 +47,11 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
       return;
     }
 
-    navigate("/user-info");
+    if (onContinue) {
+      onContinue();
+    } else {
+      navigate("/user-info");
+    }
   };
 
   const isMultipleTrip = bookingData.serviceType === "Multiple Trip";

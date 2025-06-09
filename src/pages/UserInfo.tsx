@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -16,7 +16,9 @@ import { useBookingFlow } from "@/hooks/useBookingFlow";
 import { useToast } from "@/hooks/use-toast";
 
 const UserInfo = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const event = location.state?.event;
   const { bookingData, updateBookingData } = useBookingFlow();
   const { toast } = useToast();
   const [passengers, setPassengers] = useState(bookingData.passengerCount || 1);
@@ -51,37 +53,7 @@ const UserInfo = () => {
   ];
 
   const handleContinue = () => {
-    // Validation
-    if (!bookingData.guestName?.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter guest name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!bookingData.phoneNumber?.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Basic phone validation
-    const phoneRegex = /^[\+]?[1-9][\d]{3,14}$/;
-    if (!phoneRegex.test(bookingData.phoneNumber.replace(/\s/g, ""))) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Please enter a valid phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    navigate("/review");
+    navigate("/review", { state: { event } });
   };
 
   return (
@@ -158,8 +130,10 @@ const UserInfo = () => {
               <span className="text-slate-400">Vehicle:</span>
               <span className="text-white font-medium">
                 {bookingData.carType
-                  ?.replace("-", " ")
-                  .replace(/\b\w/g, (l) => l.toUpperCase()) || "Not selected"}
+                  ? bookingData.carType
+                      .replace(/-/g, " ")
+                      .replace(/\b\w/g, (l: string) => l.toUpperCase())
+                  : "Not selected"}
               </span>
             </div>
           </div>

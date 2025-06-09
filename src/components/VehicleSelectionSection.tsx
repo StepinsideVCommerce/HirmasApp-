@@ -1,36 +1,40 @@
-
-import React from 'react';
-import VehicleCarousel from '@/components/VehicleCarousel';
+import React from "react";
+import VehicleCarousel from "@/components/VehicleCarousel";
 
 interface Vehicle {
-  id: string;
-  name: string;
-  description: string;
-  eta: string;
+  type: string;
+  count: number;
 }
 
 interface VehicleSelectionSectionProps {
   vehicles: Vehicle[];
   selectedVehicle: string;
-  onVehicleSelect: (vehicleId: string) => void;
+  onVehicleSelect: (carType: string) => void;
+  loading?: boolean;
 }
 
 const VehicleSelectionSection: React.FC<VehicleSelectionSectionProps> = ({
   vehicles,
   selectedVehicle,
   onVehicleSelect,
+  loading,
 }) => {
   return (
     <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
       <h2 className="text-lg font-semibold text-white mb-6">
         Choose your vehicle
       </h2>
-      
-      <VehicleCarousel
-        vehicles={vehicles}
-        selectedVehicle={selectedVehicle}
-        onVehicleSelect={onVehicleSelect}
-      />
+      {loading ? (
+        <div className="text-slate-300 text-center py-8">
+          Loading vehicles...
+        </div>
+      ) : (
+        <VehicleCarousel
+          vehicles={vehicles}
+          selectedVehicle={selectedVehicle}
+          onVehicleSelect={onVehicleSelect}
+        />
+      )}
     </div>
   );
 };

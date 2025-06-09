@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LocationPicker from "@/components/LocationPicker";
 import { BookingData } from "@/hooks/useBookingFlow";
+import { hermasAdminSupabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 interface TripDetailsFormProps {
   bookingData: BookingData;
@@ -10,12 +12,28 @@ interface TripDetailsFormProps {
   onShowRoute: () => void;
 }
 
-const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
-  bookingData,
-  updateBookingData,
-  onShowRoute,
-}) => {
+const TripDetailsForm: React.FC<
+  TripDetailsFormProps & { event: { id: number; [key: string]: any } }
+> = ({ bookingData, updateBookingData, onShowRoute, event }) => {
   const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
+  const [hubs, setHubs] = useState<
+    Database["public"]["Tables"]["Hub"]["Row"][]
+  >([]);
+  const [loadingHubs, setLoadingHubs] = useState(false);
+
+  useEffect(() => {
+    const fetchHubs = async () => {
+      if (!event?.id) return;
+      setLoadingHubs(true);
+      const { data, error } = await hermasAdminSupabase
+        .from("Hub")
+        .select("*")
+        .eq("event_id", event.id);
+      if (!error && data) setHubs(data);
+      setLoadingHubs(false);
+    };
+    fetchHubs();
+  }, [event]);
 
   // Check if locations are selected (for multiple trip, check all locations)
   const canShowRoute = isMultipleTrip
@@ -37,17 +55,55 @@ const TripDetailsForm: React.FC<TripDetailsFormProps> = ({
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
           <div className="ml-12">
-            <LocationPicker
-              label={isMultipleTrip ? "From (Pickup Location)" : "From"}
-              value={bookingData.pickupLocation}
-              onChange={(value) => updateBookingData({ pickupLocation: value })}
-              placeholder={
-                isMultipleTrip
-                  ? "Enter pickup location"
-                  : "Enter pickup location"
-              }
-              showCurrentLocation={true}
-            />
+            <label className="block text-slate-400 mb-2 font-medium">
+              {isMultipleTrip ? "From (Pickup Location)" : "From"}
+            </label>
+            <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
+              <select
+                className="h-14 w-full bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2 appearance-none cursor-pointer"
+                value={bookingData.pickupHub?.id || ""}
+                onChange={(e) => {
+                  const hub = hubs.find((h) => h.id === Number(e.target.value));
+                  if (hub) {
+                    updateBookingData({
+                      pickupHub: hub,
+                      pickupLocation: hub.address,
+                    });
+                  }
+                }}
+                disabled={loadingHubs}
+              >
+                <option value="" disabled>
+                  {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
+                </option>
+                {hubs.map((hub) => (
+                  <option
+                    key={hub.id}
+                    value={hub.id}
+                    className="bg-slate-800 text-white"
+                  >
+                    {hub.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg
+                  width="20"
+                  height="20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="text-slate-400"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { Car, Clock } from 'lucide-react';
+import React from "react";
+import { Car } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -10,16 +9,14 @@ import {
 } from "@/components/ui/carousel";
 
 interface Vehicle {
-  id: string;
-  name: string;
-  description: string;
-  eta: string;
+  type: string;
+  count: number;
 }
 
 interface VehicleCarouselProps {
   vehicles: Vehicle[];
   selectedVehicle: string;
-  onVehicleSelect: (vehicleId: string) => void;
+  onVehicleSelect: (carType: string) => void;
 }
 
 const VehicleCarousel: React.FC<VehicleCarouselProps> = ({
@@ -31,11 +28,14 @@ const VehicleCarousel: React.FC<VehicleCarouselProps> = ({
     <Carousel className="w-full">
       <CarouselContent className="-ml-2 md:-ml-4">
         {vehicles.map((vehicle) => (
-          <CarouselItem key={vehicle.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+          <CarouselItem
+            key={vehicle.type}
+            className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3"
+          >
             <div
-              onClick={() => onVehicleSelect(vehicle.id)}
+              onClick={() => onVehicleSelect(vehicle.type)}
               className={`relative overflow-hidden group cursor-pointer p-6 rounded-xl transition-all duration-300 h-full ${
-                selectedVehicle === vehicle.id
+                selectedVehicle === vehicle.type
                   ? "bg-yellow-500/20 border-2 border-yellow-500 shadow-lg shadow-yellow-500/20"
                   : "bg-slate-700 hover:bg-slate-600 border-2 border-transparent"
               }`}
@@ -46,20 +46,16 @@ const VehicleCarousel: React.FC<VehicleCarouselProps> = ({
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    {vehicle.name}
+                    {vehicle.type
+                      .replace(/-/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </h3>
-                  <p className="text-slate-300 text-sm mb-3">{vehicle.description}</p>
-
-                  <div className="flex items-center justify-center">
-                    <div className="flex items-center text-slate-400">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{vehicle.eta}</span>
-                    </div>
-                  </div>
+                  <p className="text-slate-300 text-lg mb-1">
+                    {vehicle.count} available
+                  </p>
                 </div>
               </div>
-
-              {selectedVehicle === vehicle.id && (
+              {selectedVehicle === vehicle.type && (
                 <div className="absolute top-3 right-3 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

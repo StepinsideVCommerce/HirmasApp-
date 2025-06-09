@@ -11,6 +11,8 @@ import ReviewConfirm from "./pages/ReviewConfirm";
 import DriverSearch from "./pages/DriverSearch";
 import RideTracking from "./pages/RideTracking";
 import NotFound from "./pages/NotFound";
+import StarterPage from "./pages/StarterPage";
+import SelectShift from "./pages/SelectShift";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +24,9 @@ const App = () => (
       <BrowserRouter>
         <div className="min-h-screen bg-slate-900">
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<StarterPage />} />
+            <Route path="/select-shift" element={<SelectShift />} />
+            <Route path="/home" element={<Index />} />
             <Route path="/vehicles" element={<VehicleSelection />} />
             <Route path="/multiple-trip" element={<MultipleTrip />} />
             <Route path="/user-info" element={<UserInfo />} />

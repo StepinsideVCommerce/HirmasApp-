@@ -1,21 +1,27 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Route, Users, ChevronRight, Star, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateBookingData } = useBookingFlow();
+
+  // Get event from navigation state (if any)
+  const event = location.state?.event;
+  console.log("Event from navigation state:", event); // Debugging log
+  // You can use the event object as needed in this page
 
   const handleSingleTrip = () => {
     updateBookingData({ serviceType: "Single Trip" });
-    navigate("/vehicles");
+    navigate("/vehicles", { state: { event } });
   };
 
   const handleMultipleTrip = () => {
     updateBookingData({ serviceType: "Multiple Trip" });
-    navigate("/multiple-trip");
+    navigate("/multiple-trip", { state: { event } });
   };
 
   return (

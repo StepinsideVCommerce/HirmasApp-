@@ -5,11 +5,19 @@ import VehicleSelectionHeader from "@/components/VehicleSelectionHeader";
 import TripDetailsForm from "@/components/TripDetailsForm";
 import VehicleSelectionSection from "@/components/VehicleSelectionSection";
 import ContinueButton from "@/components/ContinueButton";
+import { useLocation, useNavigate } from "react-router-dom";
+import { hermasAdminSupabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const VehicleSelection = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const event = location.state?.event;
   const { bookingData, updateBookingData } = useBookingFlow();
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [isRouteMapOpen, setIsRouteMapOpen] = useState(false);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Initialize selectedVehicle from bookingData.carType
   useEffect(() => {
@@ -22,67 +30,64 @@ const VehicleSelection = () => {
     }
   }, [bookingData.carType]);
 
-  const vehicles = [
-    {
-      id: "luxury-sedan",
-      name: "Luxury Sedan",
-      description: "Premium comfort for business travel",
-      eta: "3-5 min",
-    },
-    {
-      id: "suv",
-      name: "SUV",
-      description: "Spacious and comfortable for families",
-      eta: "5-8 min",
-    },
-    {
-      id: "vip-bus-28",
-      name: "VIP Bus 28 Seaters",
-      description: "Luxury group transportation",
-      eta: "15-20 min",
-    },
-    {
-      id: "mercedes-sprinter",
-      name: "Mercedes Sprinter Bus",
-      description: "Premium group travel experience",
-      eta: "12-15 min",
-    },
-    {
-      id: "shuttle-bus-18",
-      name: "18 Seaters Shuttle Bus",
-      description: "Comfortable medium group transport",
-      eta: "10-15 min",
-    },
-    {
-      id: "hiace-10",
-      name: "10 Seaters Hiace",
-      description: "Reliable group transportation",
-      eta: "8-12 min",
-    },
-    {
-      id: "staria-mercedes",
-      name: "Staria Mercedes",
-      description: "Modern luxury van",
-      eta: "6-10 min",
-    },
-    {
-      id: "vito-bus-5",
-      name: "Vito Bus 5 Seaters",
-      description: "Compact luxury transport",
-      eta: "5-8 min",
-    },
-    {
-      id: "normal-sedan",
-      name: "Normal Sedan",
-      description: "Economical and reliable transport",
-      eta: "3-5 min",
-    },
-  ];
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      if (!event?.id || !bookingData.shift?.id) {
+        setVehicles([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      // 1. Get all drivers for the selected shift and event
+      const { data: drivers, error: driversError } = await hermasAdminSupabase
+        .from("Drivers")
+        .select("id")
+        .eq("shift_id", bookingData.shift.id)
+        .eq("event_id", event.id);
+      if (driversError || !drivers || drivers.length === 0) {
+        setVehicles([]);
+        setLoading(false);
+        return;
+      }
+      const driverIds = drivers.map((d) => d.id);
+      // 2. Get all cars for these drivers and event
+      const { data: cars, error: carsError } = await hermasAdminSupabase
+        .from("Cars")
+        .select("id, type, carNumber, driver_id")
+        .in("driver_id", driverIds)
+        .eq("event_id", event.id);
+      if (carsError || !cars) {
+        setVehicles([]);
+        setLoading(false);
+        return;
+      }
+      // Group cars by type and count available cars for each type
+      const carTypeCounts: Record<string, number> = {};
+      cars.forEach((car) => {
+        if (car.type) {
+          carTypeCounts[car.type] = (carTypeCounts[car.type] || 0) + 1;
+        }
+      });
+      // Prepare vehicle list as car types with counts
+      const vehiclesByType = Object.entries(carTypeCounts).map(
+        ([type, count]) => ({
+          type,
+          count,
+        })
+      );
+      setVehicles(vehiclesByType);
+      setLoading(false);
+    };
+    fetchVehicles();
+  }, [event, bookingData.shift]);
 
-  const handleVehicleSelect = (vehicleId: string) => {
-    console.log("Vehicle selected:", vehicleId);
-    setSelectedVehicle(vehicleId);
-    updateBookingData({ carType: vehicleId });
+  const handleVehicleSelect = (carType: string) => {
+    setSelectedVehicle(carType);
+    updateBookingData({ carType });
+  };
+
+  const handleContinue = () => {
+    navigate("/user-info", { state: { event } });
   };
 
   const isMultipleTrip = bookingData.serviceType === "Multiple Trip";
@@ -90,23 +95,23 @@ const VehicleSelection = () => {
   return (
     <div className="min-h-screen bg-slate-900">
       <VehicleSelectionHeader />
-
       <div className="px-4 space-y-6">
         <TripDetailsForm
           bookingData={bookingData}
           updateBookingData={updateBookingData}
           onShowRoute={() => setIsRouteMapOpen(true)}
+          event={event}
         />
-
         <VehicleSelectionSection
           vehicles={vehicles}
           selectedVehicle={selectedVehicle}
           onVehicleSelect={handleVehicleSelect}
+          loading={loading}
         />
-
         <ContinueButton
           bookingData={bookingData}
           selectedVehicle={selectedVehicle}
+          onContinue={handleContinue}
         />
       </div>
 

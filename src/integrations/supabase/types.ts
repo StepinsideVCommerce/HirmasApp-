@@ -9,7 +9,165 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      Events: {
+        Row: {
+          id: number
+          name: string
+          startDate: string // ISO date string
+          endDate: string   // ISO date string
+        }
+        Insert: {
+          id?: number
+          name: string
+          startDate: string
+          endDate: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          startDate?: string
+          endDate?: string
+        }
+      }
+      Shifts: {
+        Row: {
+          id: number
+          event_id: number
+          number: number
+          startTime: string // ISO timestamp string
+          endTime: string   // ISO timestamp string
+        }
+        Insert: {
+          id?: number
+          event_id: number
+          number: number
+          startTime: string
+          endTime: string
+        }
+        Update: {
+          id?: number
+          event_id?: number
+          number?: number
+          startTime?: string
+          endTime?: string
+        }
+      }
+      Drivers: {
+        Row: {
+          id: number
+          shift_id: number
+          name: string
+          phoneNumber: string
+          driverNumber: number
+          event_id: number
+        }
+        Insert: {
+          id?: number
+          shift_id: number
+          name: string
+          phoneNumber: string
+          driverNumber: number
+          event_id: number
+        }
+        Update: {
+          id?: number
+          shift_id?: number
+          name?: string
+          phoneNumber?: string
+          driverNumber?: number
+          event_id?: number
+        }
+      }
+      Cars: {
+        Row: {
+          id: number
+          driver_id: number
+          type: string
+          carNumber: number
+          event_id: number
+        }
+        Insert: {
+          id?: number
+          driver_id: number
+          type: string
+          carNumber: number
+          event_id: number
+        }
+        Update: {
+          id?: number
+          driver_id?: number
+          type?: string
+          carNumber?: number
+          event_id?: number
+        }
+      }
+      Hub: {
+        Row: {
+          id: number
+          event_id: number
+          longitude: number
+          latitude: number
+          address: string
+          name: string
+        }
+        Insert: {
+          id?: number
+          event_id: number
+          longitude: number
+          latitude: number
+          address: string
+          name: string
+        }
+        Update: {
+          id?: number
+          event_id?: number
+          longitude?: number
+          latitude?: number
+          address?: string
+          name?: string
+        }
+      }
+      PendingRides: {
+        Row: {
+          id: number
+          carType: string
+          hub_id: number
+          dropOffLocation: string
+          guestCategory: string
+          guestName: string
+          phoneNumber: string
+          shift_id: number
+          pickupTime: string 
+          serviceType: string
+          event_id: number
+    }
+        Insert: {
+          id?: number
+          carType: string
+          hub_id: number
+          dropOffLocation: string
+          guestCategory: string
+          guestName: string
+          phoneNumber: string
+          shift_id: number
+          pickupTime: string 
+          serviceType: string
+          event_id: number
+        }
+        Update: {
+          id?: number
+          carType?: string
+          hub_id?: number
+          dropOffLocation?: string
+          guestCategory?: string
+          guestName?: string
+          phoneNumber?: string
+          shift_id?: number
+          pickupTime?: string 
+          serviceType?: string
+          event_id?: number
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -9,11 +9,15 @@ export interface BookingData {
   phoneNumber: string;
   guestCategory: string;
   carType: string;
+  car?: any; // Add car object to booking data
+  shift?: any; // Add shift object to booking data
   serviceType: string;
   useGPS: boolean;
   pickupDate: string;
   pickupTime: string;
   passengerCount: number;
+  pickupHub?: import("@/integrations/supabase/types").Database["public"]["Tables"]["Hub"]["Row"];
+  event?: { id: number; [key: string]: any };
 }
 
 const STORAGE_KEY = "booking-data";
