@@ -25,9 +25,12 @@ const ReviewConfirm = () => {
   const handleConfirm = async () => {
     // Insert into PendingRides
     try {
-      const { error } = await import("@/integrations/supabase/client").then(
-        ({ hermasAdminSupabase }) =>
-          hermasAdminSupabase.from("PendingRides").insert([
+      const { data, error } = await import(
+        "@/integrations/supabase/client"
+      ).then(({ hermasAdminSupabase }) =>
+        hermasAdminSupabase
+          .from("PendingRides")
+          .insert([
             {
               carType: bookingData.carType,
               hub_id: bookingData.pickupHub?.id,
@@ -41,10 +44,15 @@ const ReviewConfirm = () => {
               event_id: event?.id,
             },
           ])
+          .select()
       );
       if (error) {
         alert("Booking Failed: " + error.message);
         return;
+      }
+      // Save the new ride id in sessionStorage for use in DriverSearch
+      if (data && data[0] && data[0].id) {
+        sessionStorage.setItem("pendingRideId", data[0].id.toString());
       }
       navigate("/searching", { state: { event } });
     } catch (err) {

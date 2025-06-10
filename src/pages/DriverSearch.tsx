@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Car, Clock, MapPin } from "lucide-react";
+import { hermasAdminSupabase } from "@/integrations/supabase/client";
 
 const DriverSearch = () => {
   const location = useLocation();
@@ -8,6 +9,8 @@ const DriverSearch = () => {
   const event = location.state?.event;
   const [searchStage, setSearchStage] = useState(0);
   const [animatedDots, setAnimatedDots] = useState("");
+  const [pendingRideStatus, setPendingRideStatus] = useState<string>("");
+  const [pendingRideId, setPendingRideId] = useState<number | null>(null);
 
   useEffect(() => {
     // Animation for the loading dots
@@ -24,11 +27,56 @@ const DriverSearch = () => {
         if (prev < 3) {
           return prev + 1;
         } else {
-          setTimeout(() => navigate("/tracking", { state: { event } }), 1000);
+          // Only check status after all stages are done
+          const idStr = sessionStorage.getItem("pendingRideId");
+          if (idStr) {
+            hermasAdminSupabase
+              .from("PendingRides")
+              .select("status")
+              .eq("id", idStr)
+              .single()
+              .then((res) => {
+                if (res.data && res.data.status) {
+                  setPendingRideStatus(res.data.status);
+                  if (res.data.status === "ASSIGNED") {
+                    // sessionStorage.removeItem("pendingRideId"); // Do not remove, keep for tracking page
+                    setTimeout(
+                      () => navigate("/tracking", { state: { event } }),
+                      1000
+                    );
+                  }
+                }
+              });
+          }
           return prev;
         }
       });
     }, 2000);
+
+    // Get the pending ride id from sessionStorage
+    const idStr = sessionStorage.getItem("pendingRideId");
+    if (idStr) {
+      setPendingRideId(Number(idStr));
+      // Initial fetch of status
+      hermasAdminSupabase
+        .from("PendingRides")
+        .select("status")
+        .eq("id", idStr)
+        .single()
+        .then((res) => {
+          if (res.data && res.data.status) {
+            setPendingRideStatus(res.data.status);
+            // Only navigate if status is ASSIGNED
+            if (res.data.status === "ASSIGNED") {
+              // sessionStorage.removeItem("pendingRideId"); // Do not remove, keep for tracking page
+              setTimeout(
+                () => navigate("/tracking", { state: { event } }),
+                1000
+              );
+            }
+          }
+        });
+    }
 
     return () => {
       clearInterval(dotsInterval);
@@ -78,6 +126,17 @@ const DriverSearch = () => {
           <p className="text-slate-400 mb-8">
             Please wait while we connect you with a driver
           </p>
+
+          {pendingRideId && (
+            <div className="mb-4">
+              <span className="text-slate-400 text-sm block">
+                Ride Request Status:
+              </span>
+              <span className="text-white font-bold text-lg">
+                {pendingRideStatus || "Searching..."}
+              </span>
+            </div>
+          )}
 
           {/* Progress Indicator */}
           <div className="flex justify-center space-x-2 mb-8">
