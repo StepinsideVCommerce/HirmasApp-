@@ -23,7 +23,4 @@ export const supabase = createClient<Database>(
 export const hermasAdminSupabase = createClient<Database>(
   HERMAS_ADMIN_SUPABASE_URL,
   HERMAS_ADMIN_SUPABASE_PUBLISHABLE_KEY,
-  {
-    realtime: { params: { eventsPerSecond: 10 } },
-  }
 );
