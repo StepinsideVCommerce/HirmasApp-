@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { hermasAdminSupabase } from "@/integrations/supabase/client";
+
 import {
   ArrowLeft,
   MapPin,
@@ -25,10 +27,7 @@ const ReviewConfirm = () => {
   const handleConfirm = async () => {
     // Insert into PendingRides
     try {
-      const { data, error } = await import(
-        "@/integrations/supabase/client"
-      ).then(({ hermasAdminSupabase }) =>
-        hermasAdminSupabase
+     const { data, error } = await hermasAdminSupabase
           .from("PendingRides")
           .insert([
             {
