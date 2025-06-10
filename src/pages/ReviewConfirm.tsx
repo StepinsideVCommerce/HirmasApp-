@@ -27,24 +27,23 @@ const ReviewConfirm = () => {
   const handleConfirm = async () => {
     // Insert into PendingRides
     try {
-     const { data, error } = await hermasAdminSupabase
-          .from("PendingRides")
-          .insert([
-            {
-              carType: bookingData.carType,
-              hub_id: bookingData.pickupHub?.id,
-              dropOffLocation: bookingData.dropoffLocation,
-              guestCategory: bookingData.guestCategory,
-              guestName: bookingData.guestName,
-              phoneNumber: bookingData.phoneNumber,
-              shift_id: bookingData.shift?.id,
-              pickupTime: bookingData.pickupTime,
-              serviceType: bookingData.serviceType,
-              event_id: event?.id,
-            },
-          ])
-          .select()
-      );
+    const { data, error } = await hermasAdminSupabase
+  .from("PendingRides")
+  .insert([
+    {
+      carType: bookingData.carType,
+      hub_id: bookingData.pickupHub?.id,
+      dropOffLocation: bookingData.dropoffLocation,
+      guestCategory: bookingData.guestCategory,
+      guestName: bookingData.guestName,
+      phoneNumber: bookingData.phoneNumber,
+      shift_id: bookingData.shift?.id,
+      pickupTime: bookingData.pickupTime,
+      serviceType: bookingData.serviceType,
+      event_id: event?.id,
+    },
+  ])
+  .select();
       if (error) {
         alert("Booking Failed: " + error.message);
         return;
