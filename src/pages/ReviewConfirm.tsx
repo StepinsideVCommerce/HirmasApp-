@@ -56,7 +56,7 @@ const ReviewConfirm = () => {
       }
       navigate("/searching", { state: { event } });
     } catch (err) {
-      alert("Booking Failed: An unexpected error occurred.");
+      alert("Booking Failed: " + (err as Error).message);
     }
   };
 
