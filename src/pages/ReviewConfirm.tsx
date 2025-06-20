@@ -19,7 +19,9 @@ const ReviewConfirm = () => {
   const navigate = useNavigate();
   const { bookingData } = useBookingFlow();
   const event = location.state?.event;
-
+  const shiftManagerStr = sessionStorage.getItem("shiftManager");
+  const shiftManager = shiftManagerStr ? JSON.parse(shiftManagerStr) : null;
+  const shiftManagerId = shiftManager?.id || null;
   useEffect(() => {
     console.log("ReviewConfirm page loaded with booking data:", bookingData);
   }, [bookingData]);
@@ -41,6 +43,7 @@ const ReviewConfirm = () => {
       pickupTime: bookingData.pickupTime,
       serviceType: bookingData.serviceType,
       event_id: event?.id,
+      shift_manager_id: shiftManagerId,
     },
   ])
   .select();

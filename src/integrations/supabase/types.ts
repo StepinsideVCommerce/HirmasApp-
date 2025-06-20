@@ -85,6 +85,8 @@ export type Database = {
           type: string
           carNumber: number
           event_id: number
+          licensePlate: string
+          color: string
         }
         Insert: {
           id?: number
@@ -92,6 +94,8 @@ export type Database = {
           type: string
           carNumber: number
           event_id: number
+          licensePlate: string
+          color: string
         }
         Update: {
           id?: number
@@ -99,6 +103,8 @@ export type Database = {
           type?: string
           carNumber?: number
           event_id?: number
+          licensePlate?: string
+          color?: string
         }
       }
       Hub: {
@@ -140,6 +146,7 @@ export type Database = {
           pickupTime: string 
           serviceType: string
           event_id: number
+          shift_manager_id: number
     }
         Insert: {
           id?: number
@@ -153,6 +160,7 @@ export type Database = {
           pickupTime: string 
           serviceType: string
           event_id: number
+          shift_manager_id?: number
         }
         Update: {
           id?: number
@@ -166,6 +174,30 @@ export type Database = {
           pickupTime?: string 
           serviceType?: string
           event_id?: number
+          shift_manager_id?: number
+        }
+      }
+      ShiftManagers: {
+        Row: {
+          id: number
+          name: string
+          password: string
+          phoneNumber: string
+          email: string
+    }
+        Insert: {
+          id?: number
+          name: string
+          password: string
+          phoneNumber: string
+          email: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          password?: string
+          phoneNumber?: string
+          email?: string
         }
       }
     }

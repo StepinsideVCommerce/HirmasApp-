@@ -52,6 +52,8 @@ const RideTracking = () => {
           phone: driver.phoneNumber,
           vehicle: car.type + " VH-" + car.carNumber,
           plate: car.carNumber,
+          licensePlate: car.licensePlate,
+          color: car.color,
           eta: "On the way", // You can enhance this with real ETA logic
           rating: driver.rating || "-",
           tripTime: "10 minutes", // Set to 10 minutes
@@ -142,6 +144,16 @@ const RideTracking = () => {
                   <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded">
                     VH-{car?.carNumber}
                   </span>
+                  <span className="bg-slate-700 text-white text-xs font-bold px-2 py-0.5 rounded">
+                    {driverInfo.licensePlate}
+                  </span>
+                  {driverInfo.color && (
+                    <span
+                      className="inline-block w-6 h-6 rounded-full border-2 border-slate-700 align-middle"
+                      style={{ backgroundColor: driverInfo.color }}
+                      title={driverInfo.color}
+                    ></span>
+                  )}
                 </div>
                 <div className="text-slate-400 text-sm mt-1">
                   Phone:{" "}

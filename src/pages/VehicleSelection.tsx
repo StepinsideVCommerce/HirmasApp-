@@ -61,9 +61,19 @@ const VehicleSelection = () => {
         setLoading(false);
         return;
       }
+      // Fetch all PendingRides for this event
+      const { data: pendingRides } = await hermasAdminSupabase
+        .from("PendingRides")
+        .select("car_id, status")
+        .eq("event_id", event.id);
+      // Filter cars: exclude cars assigned to a PendingRide unless status is 'End'
+      const filteredCars = cars.filter((car) => {
+        const assignedRide = pendingRides?.find((r) => r.car_id === car.id);
+        return !assignedRide || assignedRide.status === "End";
+      });
       // Group cars by type and count available cars for each type
       const carTypeCounts: Record<string, number> = {};
-      cars.forEach((car) => {
+      filteredCars.forEach((car) => {
         if (car.type) {
           carTypeCounts[car.type] = (carTypeCounts[car.type] || 0) + 1;
         }
