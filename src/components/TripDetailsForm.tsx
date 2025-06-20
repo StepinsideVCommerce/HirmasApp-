@@ -28,7 +28,8 @@ const TripDetailsForm: React.FC<
       const { data, error } = await hermasAdminSupabase
         .from("Hub")
         .select("*")
-        .eq("event_id", event.id);
+        .eq("event_id", event.id)
+        .eq("shift_id", bookingData.shift.id);
       if (!error && data) setHubs(data);
       setLoadingHubs(false);
     };
