@@ -81,6 +81,7 @@ const SelectShift = () => {
     setSelectedShift(shift);
     setShowTimes(true);
     updateBookingData({ shift });
+    updateBookingData({event});
   };
 
   // Handle time selection
@@ -145,7 +146,7 @@ const SelectShift = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-bold text-white">
-                          Shift #{shift.number}
+                          {shift.name}
                         </div>
                         <div className="text-slate-300 text-xs">
                           {shift.startTime && shift.endTime

@@ -239,7 +239,7 @@ const UserInfo = () => {
           </div>
 
           {/* Passenger Count */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <label className="block text-slate-400 mb-3 font-medium">
               Number of Passengers
             </label>
@@ -262,11 +262,11 @@ const UserInfo = () => {
                 +
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Service Type Card */}
-        <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
+        {/* <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
             Service Details
@@ -286,7 +286,7 @@ const UserInfo = () => {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Continue Button */}
         <Button

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { hermasAdminSupabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
+import { useBookingFlow } from "@/hooks/useBookingFlow";
 
 // Use the Events row type from the generated types
 // This ensures type safety and matches the schema
@@ -14,6 +15,7 @@ const StarterPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { updateBookingData } = useBookingFlow();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -36,6 +38,9 @@ const StarterPage: React.FC = () => {
   }, []);
 
   const handleEventSelect = (event: Event) => {
+    console.log("Selected event:", event);
+    updateBookingData({ serviceType: "Trip0" });
+    updateBookingData({ event });
     navigate("/select-shift", { state: { event } });
   };
 

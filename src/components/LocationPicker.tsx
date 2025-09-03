@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface LocationPickerProps {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (location: { address: string; lat?: number; lng?: number }) => void;
   placeholder: string;
   showCurrentLocation?: boolean;
 }
@@ -51,7 +51,18 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleInputChange = (inputValue: string) => {
     console.log("LocationPicker - handleInputChange:", { label, inputValue });
-    onChange(inputValue);
+    if (geocoder.current && inputValue.trim()) {
+      geocoder.current.geocode({ address: inputValue }, (results, status) => {
+        if (status === "OK" && results?.[0]) {
+          const loc = results[0].geometry.location;
+          onChange({ address: inputValue, lat: loc.lat(), lng: loc.lng() });
+        } else {
+          onChange({ address: inputValue });
+        }
+      });
+    } else {
+      onChange({ address: inputValue });
+    }
 
     if (!autocompleteService.current || !inputValue.trim()) {
       setPredictions([]);
@@ -87,7 +98,25 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
       label,
       value: prediction.description,
     });
-    onChange(prediction.description);
+    if (geocoder.current) {
+      geocoder.current.geocode(
+        { address: prediction.description },
+        (results, status) => {
+          if (status === "OK" && results?.[0]) {
+            const loc = results[0].geometry.location;
+            onChange({
+              address: prediction.description,
+              lat: loc.lat(),
+              lng: loc.lng(),
+            });
+          } else {
+            onChange({ address: prediction.description });
+          }
+        }
+      );
+    } else {
+      onChange({ address: prediction.description });
+    }
     setPredictions([]);
     setShowPredictions(false);
     inputRef.current?.blur();
@@ -115,14 +144,22 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             (results, status) => {
               setIsGettingLocation(false);
               if (status === "OK" && results?.[0]) {
-                onChange(results[0].formatted_address);
+                onChange({
+                  address: results[0].formatted_address,
+                  lat: latitude,
+                  lng: longitude,
+                });
                 toast({
                   title: "Location found",
                   description: "Current location has been set",
                 });
               } else {
                 // Fallback to coordinates if geocoding fails
-                onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+                onChange({
+                  address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+                  lat: latitude,
+                  lng: longitude,
+                });
                 toast({
                   title: "Location found",
                   description: "Current location coordinates have been set",
@@ -133,7 +170,11 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         } else {
           // Fallback if no geocoder
           setIsGettingLocation(false);
-          onChange(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          onChange({
+            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            lat: latitude,
+            lng: longitude,
+          });
           toast({
             title: "Location found",
             description: "Current location coordinates have been set",
@@ -153,7 +194,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const clearInput = () => {
-    onChange("");
+    onChange({ address: "" });
     setPredictions([]);
     setShowPredictions(false);
     inputRef.current?.focus();

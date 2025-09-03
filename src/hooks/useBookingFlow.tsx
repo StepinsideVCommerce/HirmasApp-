@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 
 export interface BookingData {
   pickupLocation: string;
+  pickupLat?: number;
+  pickupLng?: number;
+  dropoffLat?: number;
+  dropoffLng?: number;
   dropoffLocation: string;
   firstStopLocation?: string;
   secondFromLocation?: string; // New field for the second from location
@@ -57,18 +61,18 @@ export const useBookingFlow = () => {
   }, [bookingData]);
 
   // Clear localStorage on page refresh/unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.removeItem(STORAGE_KEY);
-      console.log("Local storage cleared on page refresh");
-    };
+  // useEffect(() => {
+  //   const handleBeforeUnload = () => {
+  //     localStorage.removeItem(STORAGE_KEY);
+  //     console.log("Local storage cleared on page refresh");
+  //   };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
 
   const updateBookingData = (updates: Partial<BookingData>) => {
     setBookingData((prev) => {

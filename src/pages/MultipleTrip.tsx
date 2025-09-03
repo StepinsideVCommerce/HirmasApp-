@@ -134,8 +134,8 @@ const MultipleTrip = () => {
                 <LocationPicker
                   label="From (Pickup Location)"
                   value={bookingData.pickupLocation}
-                  onChange={(value) =>
-                    updateBookingData({ pickupLocation: value })
+                  onChange={(location) =>
+                    updateBookingData({ pickupLocation: location.address })
                   }
                   placeholder="Enter pickup location"
                   showCurrentLocation={true}
@@ -155,8 +155,8 @@ const MultipleTrip = () => {
                 <LocationPicker
                   label="To (First Stop)"
                   value={bookingData.firstStopLocation || ""}
-                  onChange={(value) =>
-                    updateBookingData({ firstStopLocation: value })
+                  onChange={(location) =>
+                    updateBookingData({ firstStopLocation: location.address })
                   }
                   placeholder="Enter first stop location"
                   showCurrentLocation={false}
@@ -173,8 +173,8 @@ const MultipleTrip = () => {
                 <LocationPicker
                   label="To (Second Stop - Final Destination)"
                   value={bookingData.dropoffLocation}
-                  onChange={(value) =>
-                    updateBookingData({ dropoffLocation: value })
+                  onChange={(location) =>
+                    updateBookingData({ dropoffLocation: location.address })
                   }
                   placeholder="Enter final destination"
                   showCurrentLocation={false}

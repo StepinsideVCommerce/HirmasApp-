@@ -147,6 +147,11 @@ export type Database = {
           serviceType: string
           event_id: number
           shift_manager_id: number
+          pickupLocation?: string | null
+          pickupLat?: number | null
+          pickupLng?: number | null
+          dropoffLat?: number | null
+          dropoffLng?: number | null
     }
         Insert: {
           id?: number
@@ -161,6 +166,11 @@ export type Database = {
           serviceType: string
           event_id: number
           shift_manager_id?: number
+          pickupLocation?: string | null
+          pickupLat?: number | null
+          pickupLng?: number | null
+          dropoffLat?: number | null
+          dropoffLng?: number | null
         }
         Update: {
           id?: number
@@ -175,6 +185,11 @@ export type Database = {
           serviceType?: string
           event_id?: number
           shift_manager_id?: number
+          pickupLocation?: string | null
+          pickupLat?: number | null
+          pickupLng?: number | null
+          dropoffLat?: number | null
+          dropoffLng?: number | null
         }
       }
       ShiftManagers: {

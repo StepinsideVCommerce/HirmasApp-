@@ -44,6 +44,11 @@ const ReviewConfirm = () => {
       serviceType: bookingData.serviceType,
       event_id: event?.id,
       shift_manager_id: shiftManagerId,
+      pickupLocation: bookingData.pickupLocation,
+      pickupLat: bookingData.pickupLat,
+      pickupLng: bookingData.pickupLng,
+      dropoffLat: bookingData.dropoffLat,
+      dropoffLng: bookingData.dropoffLng,
     },
   ])
   .select();

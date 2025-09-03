@@ -23,7 +23,7 @@ const TripDetailsForm: React.FC<
 
   useEffect(() => {
     const fetchHubs = async () => {
-      if (!event?.id) return;
+      if (!event?.id || !bookingData.shift?.id) return;
       setLoadingHubs(true);
       const { data, error } = await hermasAdminSupabase
         .from("Hub")
@@ -34,7 +34,7 @@ const TripDetailsForm: React.FC<
       setLoadingHubs(false);
     };
     fetchHubs();
-  }, [event]);
+  }, [event, bookingData.shift]);
 
   // Check if locations are selected (for multiple trip, check all locations)
   const canShowRoute = isMultipleTrip
@@ -50,60 +50,84 @@ const TripDetailsForm: React.FC<
       </h2>
 
       <div className="relative mb-6 overflow-visible">
-        {/* From Location */}
+        {/* From Location: Hubs or Custom Place */}
         <div className="relative z-30 mb-8">
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="absolute left-2 top-1/4 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
           <div className="ml-12">
             <label className="block text-slate-400 mb-2 font-medium">
               {isMultipleTrip ? "From (Pickup Location)" : "From"}
             </label>
-            <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
-              <select
-                className="h-14 w-full bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2 appearance-none cursor-pointer"
-                value={bookingData.pickupHub?.id || ""}
-                onChange={(e) => {
-                  const hub = hubs.find((h) => h.id === Number(e.target.value));
-                  if (hub) {
-                    updateBookingData({
-                      pickupHub: hub,
-                      pickupLocation: hub.address,
-                    });
-                  }
-                }}
-                disabled={loadingHubs}
-              >
-                <option value="" disabled>
-                  {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
-                </option>
-                {hubs.map((hub) => (
-                  <option
-                    key={hub.id}
-                    value={hub.id}
-                    className="bg-slate-800 text-white"
-                  >
-                    {hub.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="text-slate-400"
+            <div className="space-y-2">
+              {/* Hubs Dropdown */}
+              <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
+                <select
+                  className="h-14 w-full bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2 appearance-none cursor-pointer"
+                  value={bookingData.pickupHub?.id || ""}
+                  onChange={(e) => {
+                    const hub = hubs.find(
+                      (h) => h.id === Number(e.target.value)
+                    );
+                    if (hub) {
+                      updateBookingData({
+                        pickupHub: hub,
+                        pickupLocation: hub.address,
+                        pickupLat: hub.latitude,
+                        pickupLng: hub.longitude,
+                      });
+                    }
+                  }}
+                  disabled={loadingHubs}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  <option value="" disabled>
+                    {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
+                  </option>
+                  {hubs.map((hub) => (
+                    <option
+                      key={hub.id}
+                      value={hub.id}
+                      className="bg-slate-800 text-white"
+                    >
+                      {hub.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    className="text-slate-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
               </div>
+              {/* Custom Place LocationPicker */}
+              <LocationPicker
+                label="Or enter a place..."
+                value={
+                  bookingData.pickupHub ? "" : bookingData.pickupLocation || ""
+                }
+                onChange={(location) => {
+                  updateBookingData({
+                    pickupLocation: location.address,
+                    pickupLat: location.lat,
+                    pickupLng: location.lng,
+                    pickupHub: undefined,
+                  });
+                }}
+                placeholder="Or enter a place..."
+                showCurrentLocation={false}
+              />
             </div>
           </div>
         </div>
@@ -119,8 +143,8 @@ const TripDetailsForm: React.FC<
               <LocationPicker
                 label="To (First Stop)"
                 value={bookingData.firstStopLocation || ""}
-                onChange={(value) =>
-                  updateBookingData({ firstStopLocation: value })
+                onChange={(location) =>
+                  updateBookingData({ firstStopLocation: location.address })
                 }
                 placeholder="Enter first stop location"
                 showCurrentLocation={false}
@@ -143,8 +167,11 @@ const TripDetailsForm: React.FC<
                 isMultipleTrip ? "To (Second Stop - Final Destination)" : "To"
               }
               value={bookingData.dropoffLocation}
-              onChange={(value) =>
-                updateBookingData({ dropoffLocation: value })
+              onChange={(location) =>
+                updateBookingData({ dropoffLocation: location.address,
+                  dropoffLat: location.lat,
+                  dropoffLng: location.lng
+                 })
               }
               placeholder={
                 isMultipleTrip ? "Enter final destination" : "Enter destination"

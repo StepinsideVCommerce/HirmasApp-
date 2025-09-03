@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Car, Shield } from "lucide-react";
 
 // Minimal types for related entities
@@ -47,7 +47,11 @@ export function TripTracking() {
   const shiftManagerId = shiftManager?.id || null;
 
   // Fetch all non-pending rides for this shift manager
-  const { data: rides = [], isLoading } = useQuery({
+  const {
+    data: rides = [],
+    isLoading,
+    refetch: refetchRides,
+  } = useQuery({
     queryKey: ["nonPendingRides", shiftManagerId],
     queryFn: async () => {
       if (!shiftManagerId) return [];
@@ -60,6 +64,29 @@ export function TripTracking() {
     },
     enabled: !!shiftManagerId,
   });
+
+  // Real-time subscription for PendingRides
+  useEffect(() => {
+    if (!shiftManagerId) return;
+    const channel = hermasAdminSupabase
+      .channel("realtime-pending-rides")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "PendingRides",
+          filter: `shift_manager_id=eq.${shiftManagerId}`,
+        },
+        (payload) => {
+          refetchRides();
+        }
+      )
+      .subscribe();
+    return () => {
+      hermasAdminSupabase.removeChannel(channel);
+    };
+  }, [shiftManagerId, refetchRides]);
 
   // Fetch all cars, shifts, hubs, and drivers
   const { data: cars = [] } = useQuery({
@@ -131,7 +158,7 @@ export function TripTracking() {
       carModel: ride.carType || "-",
       status: ride.status || "-",
       dateTime: shift?.date ? `${shift.date}` : "",
-      location: hub?.address || "-",
+      location: hub?.address || ride.pickupLocation ||"-",
       destination: ride.dropOffLocation || "-",
       clientPhone: ride.phoneNumber || "-",
       pickupTime: ride.pickupTime || "-",
@@ -145,6 +172,12 @@ export function TripTracking() {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
+      case "PENDING":
+        return {
+          color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+          icon: "📞",
+          label: "Pending",
+          };
       case "STARTED":
         return {
           color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
@@ -175,11 +208,11 @@ export function TripTracking() {
           icon: "📋",
           label: "Assigned",
         };
-      case "PENDING":
+      case "ARRIVED_TO_DESTINATION":
         return {
-          color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-          icon: "📞",
-          label: "Pending",
+          color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+          icon: "📍",
+          label: "Arrived at Destination",
         };
       default:
         return {

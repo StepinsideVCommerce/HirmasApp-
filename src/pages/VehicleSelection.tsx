@@ -12,7 +12,13 @@ import type { Database } from "@/integrations/supabase/types";
 const VehicleSelection = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const event = location.state?.event;
+  let event = location.state?.event;
+  if (!event) {
+    const stored = sessionStorage.getItem("selectedEvent");
+    if (stored) {
+      event = JSON.parse(stored);
+    }
+  }
   const { bookingData, updateBookingData } = useBookingFlow();
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [isRouteMapOpen, setIsRouteMapOpen] = useState(false);
