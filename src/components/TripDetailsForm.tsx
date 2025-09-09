@@ -5,6 +5,7 @@ import LocationPicker from "@/components/LocationPicker";
 import { BookingData } from "@/hooks/useBookingFlow";
 import { hermasAdminSupabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { Card } from "@/components/ui/card";
 
 interface TripDetailsFormProps {
   bookingData: BookingData;
@@ -45,73 +46,44 @@ const TripDetailsForm: React.FC<
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 relative overflow-visible">
-      <h2 className="text-lg font-semibold text-white mb-4">
-        Trip Details - {bookingData.serviceType || "Single Trip"}
-      </h2>
-
-      <div className="relative mb-6 overflow-visible">
-        {/* From Location: Hubs or Custom Place */}
-        <div className="relative z-30 mb-8">
-          <div className="absolute left-2 top-1/4 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-          </div>
-          <div className="ml-12">
-            <label className="block text-slate-400 mb-2 font-medium">
-              {isMultipleTrip ? "From (Pickup Location)" : "From"}
-            </label>
-            <div className="space-y-2">
-              {/* Hubs Dropdown */}
-              <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
-                <select
-                  className="h-14 w-full bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2 appearance-none cursor-pointer"
-                  value={bookingData.pickupHub?.id || ""}
-                  onChange={(e) => {
-                    const hub = hubs.find(
-                      (h) => h.id === Number(e.target.value)
-                    );
-                    if (hub) {
-                      updateBookingData({
-                        pickupHub: hub,
-                        pickupLocation: hub.address,
-                        pickupLat: hub.latitude,
-                        pickupLng: hub.longitude,
-                      });
-                    }
-                  }}
-                  disabled={loadingHubs}
-                >
-                  <option value="" disabled>
-                    {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
-                  </option>
-                  {hubs.map((hub) => (
-                    <option
-                      key={hub.id}
-                      value={hub.id}
-                      className="bg-slate-800 text-white"
-                    >
-                      {hub.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg
-                    width="20"
-                    height="20"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="text-slate-400"
+      <Card className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-xl p-6 max-w-full mx-auto">
+        <h2 className="text-2xl font-bold text-white mb-6">
+          Trip Details – Single Trip
+        </h2>
+        <div className="space-y-6">
+          {/* From Section */}
+          <div>
+            <label className="text-white font-medium mb-2 block">From</label>
+            <div className="space-y-4">
+              <select
+                className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 mb-0 focus:ring-2 focus:ring-gold-500 placeholder-gray-500"
+                value={bookingData.pickupHub?.id || ""}
+                onChange={(e) => {
+                  const hub = hubs.find((h) => h.id === Number(e.target.value));
+                  if (hub) {
+                    updateBookingData({
+                      pickupHub: hub,
+                      pickupLocation: hub.address,
+                      pickupLat: hub.latitude,
+                      pickupLng: hub.longitude,
+                    });
+                  }
+                }}
+                disabled={loadingHubs}
+              >
+                <option value="" disabled>
+                  {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
+                </option>
+                {hubs.map((hub) => (
+                  <option
+                    key={hub.id}
+                    value={hub.id}
+                    className="bg-gray-900 text-gray-200"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
-              {/* Custom Place LocationPicker */}
+                    {hub.name}
+                  </option>
+                ))}
+              </select>
               <LocationPicker
                 label="Or enter a place..."
                 value={
@@ -128,61 +100,83 @@ const TripDetailsForm: React.FC<
                 placeholder="Or enter a place..."
                 showCurrentLocation={false}
               />
+              {/* Pickup Note for Single Trip */}
+              {!isMultipleTrip && (
+                <div>
+                  <label className="text-white font-medium mb-2 block">
+                    Pickup Note
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 placeholder-gray-500 focus:ring-2 focus:ring-gold-500"
+                    value={bookingData.pickupNote || ""}
+                    onChange={(e) =>
+                      updateBookingData({ pickupNote: e.target.value })
+                    }
+                    placeholder="Add a note for the pickup location (optional)"
+                  />
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Multiple Trip: First Stop */}
-        {isMultipleTrip && (
-          <div className="relative z-20 mb-8">
-            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
-            <div className="ml-12">
+          {/* Section Separator */}
+          <div className="border-t border-gray-700 my-6"></div>
+
+          {/* To Section */}
+          <div>
+            <div className="space-y-4">
               <LocationPicker
-                label="To (First Stop)"
-                value={bookingData.firstStopLocation || ""}
-                onChange={(location) =>
-                  updateBookingData({ firstStopLocation: location.address })
+                label={
+                  isMultipleTrip ? "To (Second Stop - Final Destination)" : "To"
                 }
-                placeholder="Enter first stop location"
+                value={bookingData.dropoffLocation}
+                onChange={(location) =>
+                  updateBookingData({
+                    dropoffLocation: location.address,
+                    dropoffLat: location.lat,
+                    dropoffLng: location.lng,
+                  })
+                }
+                placeholder={
+                  isMultipleTrip
+                    ? "Enter final destination"
+                    : "Enter destination"
+                }
                 showCurrentLocation={false}
               />
+              {/* Dropoff Note for Single Trip */}
+              {!isMultipleTrip && (
+                <div>
+                  <label className="text-white font-medium mb-2 block">
+                    Dropoff Note
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 placeholder-gray-500 focus:ring-2 focus:ring-gold-500"
+                    value={bookingData.dropoffNote || ""}
+                    onChange={(e) =>
+                      updateBookingData({ dropoffNote: e.target.value })
+                    }
+                    placeholder="Add a note for the dropoff location (optional)"
+                  />
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Connection line for single trip or to final destination */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-yellow-500 my-12"></div>
-
-        {/* To Location */}
-        <div className="relative z-10">
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full"></div>
-          </div>
-          <div className="ml-12">
-            <LocationPicker
-              label={
-                isMultipleTrip ? "To (Second Stop - Final Destination)" : "To"
-              }
-              value={bookingData.dropoffLocation}
-              onChange={(location) =>
-                updateBookingData({ dropoffLocation: location.address,
-                  dropoffLat: location.lat,
-                  dropoffLng: location.lng
-                 })
-              }
-              placeholder={
-                isMultipleTrip ? "Enter final destination" : "Enter destination"
-              }
-              showCurrentLocation={false}
-            />
-          </div>
+          {/* Show on Map Button */}
+          {/* {canShowRoute && (
+            <Button
+              onClick={onShowRoute}
+              className="w-full h-12 bg-gradient-to-r from-gold-500 to-yellow-500 text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <span className="text-xl">🚗</span>
+              Show Route on Map
+            </Button>
+          )} */}
         </div>
-      </div>
-
-      {/* Show on Map Button */}
+      </Card>
       {canShowRoute && (
         <div className="mt-6 flex justify-center">
           <Button

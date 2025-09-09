@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
 import RouteMapModal from "@/components/RouteMapModal";
 import VehicleSelectionHeader from "@/components/VehicleSelectionHeader";
@@ -12,14 +12,11 @@ import type { Database } from "@/integrations/supabase/types";
 const VehicleSelection = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  let event = location.state?.event;
-  if (!event) {
-    const stored = sessionStorage.getItem("selectedEvent");
-    if (stored) {
-      event = JSON.parse(stored);
-    }
-  }
   const { bookingData, updateBookingData } = useBookingFlow();
+  // Always get event from location.state, fallback to bookingData.event
+  const event = useMemo(() => {
+    return location.state?.event || bookingData.event;
+  }, [location.state, bookingData.event]);
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [isRouteMapOpen, setIsRouteMapOpen] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -103,6 +100,7 @@ const VehicleSelection = () => {
   };
 
   const handleContinue = () => {
+    // Always pass the latest event in state
     navigate("/user-info", { state: { event } });
   };
 
@@ -124,6 +122,12 @@ const VehicleSelection = () => {
           onVehicleSelect={handleVehicleSelect}
           loading={loading}
         />
+        {!loading && vehicles.length === 0 && (
+          <div className="text-center text-lg text-red-500 font-semibold py-6">
+            No cars are available for this event and shift. Please try another
+            shift or contact support.
+          </div>
+        )}
         <ContinueButton
           bookingData={bookingData}
           selectedVehicle={selectedVehicle}

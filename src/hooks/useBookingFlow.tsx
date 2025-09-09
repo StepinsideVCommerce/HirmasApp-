@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 
 export interface BookingData {
   pickupLocation: string;
+  pickupNote?: string;
   pickupLat?: number;
   pickupLng?: number;
   dropoffLat?: number;
   dropoffLng?: number;
   dropoffLocation: string;
+  dropoffNote?: string;
   firstStopLocation?: string;
   secondFromLocation?: string; // New field for the second from location
   guestName: string;

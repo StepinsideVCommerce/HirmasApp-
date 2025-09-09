@@ -17,7 +17,7 @@ import { useBookingFlow } from "@/hooks/useBookingFlow";
 const ReviewConfirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookingData } = useBookingFlow();
+  const { bookingData ,updateBookingData,clearBookingData} = useBookingFlow();
   const event = location.state?.event;
   const shiftManagerStr = sessionStorage.getItem("shiftManager");
   const shiftManager = shiftManagerStr ? JSON.parse(shiftManagerStr) : null;
@@ -49,6 +49,8 @@ const ReviewConfirm = () => {
       pickupLng: bookingData.pickupLng,
       dropoffLat: bookingData.dropoffLat,
       dropoffLng: bookingData.dropoffLng,
+      pickup_note: bookingData.pickupNote,
+      dropoff_note: bookingData.dropoffNote,
     },
   ])
   .select();
@@ -60,6 +62,7 @@ const ReviewConfirm = () => {
       if (data && data[0] && data[0].id) {
         sessionStorage.setItem("pendingRideId", data[0].id.toString());
       }
+      clearBookingData();
       navigate("/searching", { state: { event } });
     } catch (err) {
       alert("Booking Failed: " + (err as Error).message);

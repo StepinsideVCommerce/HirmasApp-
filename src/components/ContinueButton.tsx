@@ -8,12 +8,14 @@ interface ContinueButtonProps {
   bookingData: BookingData;
   selectedVehicle: string;
   onContinue?: () => void;
+  disabled?: boolean;
 }
 
 const ContinueButton: React.FC<ContinueButtonProps> = ({
   bookingData,
   selectedVehicle,
   onContinue,
+  disabled = false,
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,7 +61,8 @@ const ContinueButton: React.FC<ContinueButtonProps> = ({
     !selectedVehicle ||
     !bookingData.pickupLocation ||
     !bookingData.dropoffLocation ||
-    (isMultipleTrip && !bookingData.firstStopLocation);
+    (isMultipleTrip && !bookingData.firstStopLocation) ||
+    disabled;
 
   return (
     <Button

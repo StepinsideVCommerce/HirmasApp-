@@ -24,6 +24,9 @@ const SelectShift = () => {
   const [selectedShift, setSelectedShift] = useState<any | null>(null);
   const [showTimes, setShowTimes] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [shiftCarCounts, setShiftCarCounts] = useState<Record<number, number>>(
+    {}
+  );
 
   // Parse event dates
   const startDate = event?.startDate ? parseISO(event.startDate) : null;
@@ -41,18 +44,62 @@ const SelectShift = () => {
     return arr;
   }, [startDate, endDate]);
 
-  // Fetch shifts for selected date
+  // Fetch shifts and available car counts for selected date
   const fetchShifts = async (date: string) => {
     setLoadingShifts(true);
     setSelectedShift(null);
     setSelectedTime(null);
     setShowTimes(false);
-    const { data, error } = await hermasAdminSupabase
+    const { data: shiftsData, error } = await hermasAdminSupabase
       .from("Shifts")
       .select("*")
       .eq("event_id", event.id)
       .eq("date", date);
-    setShifts(data || []);
+    setShifts(shiftsData || []);
+    // For each shift, fetch available car count
+    const carCounts: Record<number, number> = {};
+    if (shiftsData && shiftsData.length > 0) {
+      await Promise.all(
+        shiftsData.map(async (shift: any) => {
+          // 1. Get all drivers for the shift and event
+          const { data: drivers } = await hermasAdminSupabase
+            .from("Drivers")
+            .select("id")
+            .eq("shift_id", shift.id)
+            .eq("event_id", event.id);
+          if (!drivers || drivers.length === 0) {
+            carCounts[shift.id] = 0;
+            return;
+          }
+          const driverIds = drivers.map((d: any) => d.id);
+          // 2. Get all cars for these drivers and event
+          const { data: cars } = await hermasAdminSupabase
+            .from("Cars")
+            .select("id, type, carNumber, driver_id")
+            .in("driver_id", driverIds)
+            .eq("event_id", event.id);
+          if (!cars) {
+            carCounts[shift.id] = 0;
+            return;
+          }
+          // 3. Get all PendingRides for this event and shift
+          const { data: pendingRides } = await hermasAdminSupabase
+            .from("PendingRides")
+            .select("car_id, status")
+            .eq("event_id", event.id)
+            .eq("shift_id", shift.id);
+          // 4. Filter cars: exclude cars assigned to a PendingRide unless status is 'End'
+          const filteredCars = cars.filter((car: any) => {
+            const assignedRide = pendingRides?.find(
+              (r: any) => r.car_id === car.id
+            );
+            return !assignedRide || assignedRide.status === "End";
+          });
+          carCounts[shift.id] = filteredCars.length;
+        })
+      );
+    }
+    setShiftCarCounts(carCounts);
     setLoadingShifts(false);
   };
 
@@ -81,7 +128,7 @@ const SelectShift = () => {
     setSelectedShift(shift);
     setShowTimes(true);
     updateBookingData({ shift });
-    updateBookingData({event});
+    updateBookingData({ event });
   };
 
   // Handle time selection
@@ -141,54 +188,72 @@ const SelectShift = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {shifts.map((shift) => (
-                  <div key={shift.id} className="bg-slate-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-white">
-                          {shift.name}
+                {shifts.map((shift) => {
+                  const availableCars = shiftCarCounts[shift.id] ?? null;
+                  return (
+                    <div key={shift.id} className="bg-slate-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-white">
+                            {shift.name}
+                          </div>
+                          <div className="text-slate-300 text-xs">
+                            {shift.startTime && shift.endTime
+                              ? `${format(
+                                  parseISO(shift.startTime),
+                                  "HH:mm"
+                                )} - ${format(
+                                  parseISO(shift.endTime),
+                                  "HH:mm"
+                                )}`
+                              : `${shift.startTime} - ${shift.endTime}`}
+                          </div>
+                          <div className="text-xs text-yellow-400 mt-1">
+                            {availableCars !== null
+                              ? `Available Cars: ${availableCars}`
+                              : "Checking cars..."}
+                          </div>
                         </div>
-                        <div className="text-slate-300 text-xs">
-                          {shift.startTime && shift.endTime
-                            ? `${format(
-                                parseISO(shift.startTime),
-                                "HH:mm"
-                              )} - ${format(parseISO(shift.endTime), "HH:mm")}`
-                            : `${shift.startTime} - ${shift.endTime}`}
-                        </div>
+                        <Button
+                          className={`bg-yellow-500 text-black px-4 py-2 rounded-lg ${
+                            availableCars === 0
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            availableCars > 0 && handleShiftSelect(shift)
+                          }
+                          disabled={availableCars === 0}
+                        >
+                          Select
+                        </Button>
                       </div>
-                      <Button
-                        className="bg-yellow-500 text-black px-4 py-2 rounded-lg"
-                        onClick={() => handleShiftSelect(shift)}
-                      >
-                        Select
-                      </Button>
+                      {/* Dropdown for times */}
+                      {selectedShift?.id === shift.id && showTimes && (
+                        <div className="mt-4">
+                          <div className="mb-2 text-slate-200 font-medium">
+                            Choose Time
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {getTimeSlots(shift).map((time) => (
+                              <Button
+                                key={time}
+                                className={`px-3 py-1 rounded-md text-xs font-semibold ${
+                                  selectedTime === time
+                                    ? "bg-yellow-500 text-black"
+                                    : "bg-slate-600 text-white"
+                                }`}
+                                onClick={() => handleTimeSelect(time)}
+                              >
+                                {time}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {/* Dropdown for times */}
-                    {selectedShift?.id === shift.id && showTimes && (
-                      <div className="mt-4">
-                        <div className="mb-2 text-slate-200 font-medium">
-                          Choose Time
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {getTimeSlots(shift).map((time) => (
-                            <Button
-                              key={time}
-                              className={`px-3 py-1 rounded-md text-xs font-semibold ${
-                                selectedTime === time
-                                  ? "bg-yellow-500 text-black"
-                                  : "bg-slate-600 text-white"
-                              }`}
-                              onClick={() => handleTimeSelect(time)}
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

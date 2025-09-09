@@ -47,6 +47,12 @@ const StarterPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4">
       <div className="max-w-xl w-full bg-slate-800/50 backdrop-blur-md rounded-xl p-8 mt-12">
+        <Button
+          className="mb-4 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
+          onClick={() => navigate("/ride-requests")}
+        >
+          ← Back
+        </Button>
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Choose an Event
         </h1>

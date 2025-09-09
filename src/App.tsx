@@ -57,7 +57,13 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <SignOutButton onSignOut={handleSignOut} />
+          {(() => {
+            const location = window.location.pathname;
+            if (location === "/ride-requests") {
+              return <SignOutButton onSignOut={handleSignOut} />;
+            }
+            return null;
+          })()}
           <div className="min-h-screen bg-slate-900">
             <Routes>
               <Route
