@@ -44,6 +44,33 @@ const TripDetailsForm: React.FC<
       bookingData.dropoffLocation
     : bookingData.pickupLocation && bookingData.dropoffLocation;
 
+  // Check for Airport Arrival event
+  const isAirportArrival = event?.name?.includes("Airport Arrival");
+  const isAirportDeparture = event?.name?.includes("Airport Departure");
+
+  useEffect(() => {
+    if (isAirportArrival) {
+      updateBookingData({
+        pickupLocation:
+          "King Khalid International Airport (RUH), Airport Road, King Khalid International Airport, Riyadh Saudi Arabia",
+        pickupLat: 24.959443,
+        pickupLng: 46.7010829,
+        pickupHub: undefined,
+      });
+    }
+    if (isAirportDeparture) {
+      updateBookingData({
+        dropoffLocation:
+          "King Khalid International Airport (RUH), Airport Road, King Khalid International Airport, Riyadh Saudi Arabia",
+        dropoffLat: 24.959443,
+        dropoffLng: 46.7010829,
+        pickupHub: undefined,
+      });
+    }
+    // Only run when event changes
+    // eslint-disable-next-line
+  }, [event?.name]);
+
   return (
     <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6 relative overflow-visible">
       <Card className="bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-xl p-6 max-w-full mx-auto">
@@ -55,56 +82,74 @@ const TripDetailsForm: React.FC<
           <div>
             <label className="text-white font-medium mb-2 block">From</label>
             <div className="space-y-4">
-              <select
-                className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 mb-0 focus:ring-2 focus:ring-gold-500 placeholder-gray-500"
-                value={bookingData.pickupHub?.id || ""}
-                onChange={(e) => {
-                  const hub = hubs.find((h) => h.id === Number(e.target.value));
-                  if (hub) {
-                    updateBookingData({
-                      pickupHub: hub,
-                      pickupLocation: hub.address,
-                      pickupLat: hub.latitude,
-                      pickupLng: hub.longitude,
-                    });
-                  }
-                }}
-                disabled={loadingHubs}
-              >
-                <option value="" disabled>
-                  {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
-                </option>
-                {hubs.map((hub) => (
-                  <option
-                    key={hub.id}
-                    value={hub.id}
-                    className="bg-gray-900 text-gray-200"
+              {!isAirportArrival && (
+                <>
+                  <select
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 mb-0 focus:ring-2 focus:ring-gold-500 placeholder-gray-500"
+                    value={bookingData.pickupHub?.id || ""}
+                    onChange={(e) => {
+                      const hub = hubs.find(
+                        (h) => h.id === Number(e.target.value)
+                      );
+                      if (hub) {
+                        updateBookingData({
+                          pickupHub: hub,
+                          pickupLocation: hub.address,
+                          pickupLat: hub.latitude,
+                          pickupLng: hub.longitude,
+                        });
+                      }
+                    }}
+                    disabled={loadingHubs}
                   >
-                    {hub.name}
-                  </option>
-                ))}
-              </select>
-              <LocationPicker
-                label="Or enter a place..."
-                value={
-                  bookingData.pickupHub ? "" : bookingData.pickupLocation || ""
-                }
-                onChange={(location) => {
-                  updateBookingData({
-                    pickupLocation: location.address,
-                    pickupLat: location.lat,
-                    pickupLng: location.lng,
-                    pickupHub: undefined,
-                  });
-                }}
-                placeholder="Or enter a place..."
-                showCurrentLocation={false}
-              />
+                    <option value="" disabled>
+                      {loadingHubs ? "Loading hubs..." : "Select a pickup hub"}
+                    </option>
+                    {hubs.map((hub) => (
+                      <option
+                        key={hub.id}
+                        value={hub.id}
+                        className="bg-gray-900 text-gray-200"
+                      >
+                        {hub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <LocationPicker
+                    label="Or enter a place..."
+                    value={
+                      bookingData.pickupHub
+                        ? ""
+                        : bookingData.pickupLocation || ""
+                    }
+                    onChange={(location) => {
+                      updateBookingData({
+                        pickupLocation: location.address,
+                        pickupLat: location.lat,
+                        pickupLng: location.lng,
+                        pickupHub: undefined,
+                      });
+                    }}
+                    placeholder="Or enter a place..."
+                    showCurrentLocation={false}
+                  />
+                </>
+              )}
+              {isAirportArrival && (
+                <>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 mb-0 focus:ring-2 focus:ring-gold-500 placeholder-gray-500"
+                    value={bookingData.pickupLocation || ""}
+                    disabled
+                  />
+                </>
+              )}
               {/* Pickup Note for Single Trip */}
               {!isMultipleTrip && (
                 <div>
                   <label className="text-white font-medium mb-2 block">
-                    Pickup Note
+                    {isAirportArrival ? "Terminal" : "Pickup Note"}
                   </label>
                   <input
                     type="text"
@@ -113,7 +158,11 @@ const TripDetailsForm: React.FC<
                     onChange={(e) =>
                       updateBookingData({ pickupNote: e.target.value })
                     }
-                    placeholder="Add a note for the pickup location (optional)"
+                    placeholder={
+                      isAirportArrival
+                        ? "Enter terminal"
+                        : "Add a note for the pickup location (optional)"
+                    }
                   />
                 </div>
               )}
@@ -126,30 +175,44 @@ const TripDetailsForm: React.FC<
           {/* To Section */}
           <div>
             <div className="space-y-4">
-              <LocationPicker
-                label={
-                  isMultipleTrip ? "To (Second Stop - Final Destination)" : "To"
-                }
-                value={bookingData.dropoffLocation}
-                onChange={(location) =>
-                  updateBookingData({
-                    dropoffLocation: location.address,
-                    dropoffLat: location.lat,
-                    dropoffLng: location.lng,
-                  })
-                }
-                placeholder={
-                  isMultipleTrip
-                    ? "Enter final destination"
-                    : "Enter destination"
-                }
-                showCurrentLocation={false}
-              />
+              {!isAirportDeparture && (
+                <LocationPicker
+                  label={
+                    isMultipleTrip
+                      ? "To (Second Stop - Final Destination)"
+                      : "To"
+                  }
+                  value={bookingData.dropoffLocation}
+                  onChange={(location) =>
+                    updateBookingData({
+                      dropoffLocation: location.address,
+                      dropoffLat: location.lat,
+                      dropoffLng: location.lng,
+                    })
+                  }
+                  placeholder={
+                    isMultipleTrip
+                      ? "Enter final destination"
+                      : "Enter destination"
+                  }
+                  showCurrentLocation={false}
+                />
+              )}
+              {isAirportDeparture && (
+                <>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-800/60 text-gray-200 px-4 py-3 mb-0 focus:ring-2 focus:ring-gold-500 placeholder-gray-500"
+                    value={bookingData.dropoffLocation || ""}
+                    disabled
+                  />
+                </>
+              )}
               {/* Dropoff Note for Single Trip */}
               {!isMultipleTrip && (
                 <div>
                   <label className="text-white font-medium mb-2 block">
-                    Dropoff Note
+                    {isAirportDeparture ? "Terminal" : "Dropoff Note"}
                   </label>
                   <input
                     type="text"
@@ -158,7 +221,7 @@ const TripDetailsForm: React.FC<
                     onChange={(e) =>
                       updateBookingData({ dropoffNote: e.target.value })
                     }
-                    placeholder="Add a note for the dropoff location (optional)"
+                    placeholder={isAirportDeparture?"Enter Terminal":"Add a note for the dropoff location (optional)"}
                   />
                 </div>
               )}
