@@ -54,9 +54,6 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Header
-      onSignOut={handleSignOut}
-       />
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -71,19 +68,22 @@ const App = () => {
                 path="/*"
                 element={
                   <RequireAuth>
-                    <Routes>
-                      <Route path="/" element={<StarterPage />} />
-                      <Route path="/select-shift" element={<SelectShift />} />
-                      <Route path="/home" element={<Index />} />
-                      <Route path="/vehicles" element={<VehicleSelection />} />
-                      <Route path="/multiple-trip" element={<MultipleTrip />} />
-                      <Route path="/user-info" element={<UserInfo />} />
-                      <Route path="/review" element={<ReviewConfirm />} />
-                      <Route path="/searching" element={<DriverSearch />} />
-                      <Route path="/tracking" element={<RideTracking />} />
-                      <Route path="ride-requests" element={<TripTracking />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
+                    <>
+                      <Header onSignOut={handleSignOut} />
+                      <Routes>
+                        <Route path="/" element={<StarterPage />} />
+                        <Route path="/select-shift" element={<SelectShift />} />
+                        <Route path="/home" element={<Index />} />
+                        <Route path="/vehicles" element={<VehicleSelection />} />
+                        <Route path="/multiple-trip" element={<MultipleTrip />} />
+                        <Route path="/user-info" element={<UserInfo />} />
+                        <Route path="/review" element={<ReviewConfirm />} />
+                        <Route path="/searching" element={<DriverSearch />} />
+                        <Route path="/tracking" element={<RideTracking />} />
+                        <Route path="ride-requests" element={<TripTracking />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </>
                   </RequireAuth>
                 }
               />
