@@ -1,4 +1,3 @@
-import { Clock, MapPin, User, ExternalLink, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +5,24 @@ import { useQuery } from "@tanstack/react-query";
 import { hermasAdminSupabase } from "@/integrations/supabase/client";
 import CallIcon from "@mui/icons-material/Call";
 import { useNavigate } from "react-router-dom";
+import bookRide from "../../public/images/bookRide.png";
+import {
+  Car,
+  Clock,
+  MapPin,
+  User,
+  Phone,
+  Hash,
+  ShieldCheck,
+  Hourglass,
+  CheckCircle,
+  User2,
+  CalendarDays,
+  Route as RouteIcon,
+  ArrowRight,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Dialog,
   DialogTrigger,
@@ -15,8 +32,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
-import { Car, Shield } from "lucide-react";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Minimal types for related entities
 interface Car {
@@ -158,7 +174,7 @@ export function TripTracking() {
       carModel: ride.carType || "-",
       status: ride.status || "-",
       dateTime: shift?.date ? `${shift.date}` : "",
-      location: hub?.address || ride.pickupLocation ||"-",
+      location: hub?.address || ride.pickupLocation || "-",
       destination: ride.dropOffLocation || "-",
       clientPhone: ride.phoneNumber || "-",
       pickupTime: ride.pickupTime || "-",
@@ -177,7 +193,7 @@ export function TripTracking() {
           color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
           icon: "📞",
           label: "Pending",
-          };
+        };
       case "STARTED":
         return {
           color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
@@ -231,339 +247,349 @@ export function TripTracking() {
     statusCounts[status] = (statusCounts[status] || 0) + 1;
   });
   const uniqueStatuses = Object.keys(statusCounts);
-
+  const GOLD = "#D4AF37";
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 py-10 px-2 md:px-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-4xl font-extrabold gold-text mb-2 drop-shadow-lg tracking-tight">
-            <span className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 bg-clip-text text-transparent">
-              📍 Trip Tracking Log
-            </span>
-          </h1>
-          <p className="text-gray-300 text-lg font-medium">
-            Real-time monitoring of ongoing and completed premium trips
-          </p>
+    <div className="space-y-6 bg-white text-black font-sans antialiased">
+      {/* HERO */}
+      <div className="rounded-2xl border border-neutral-200 bg-white pt-0 pr-6 pb-4 pl-6 shadow-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          {/* Left: title & icon inline */}
+          <div className="flex items-center">
+            <div className="flex items-center gap-4">
+              <div className="bg-black text-[${GOLD}] p-3 rounded-lg -mt-1">
+                <RouteIcon
+                  className="h-10 w-10"
+                  aria-hidden="true"
+                  color={GOLD}
+                />
+              </div>
+              <div>
+                <h2 className="relative text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight inline-block text-black">
+                  <span className="shimmer-text">Trip Tracking Log</span>
+                </h2>
+                <p className="text-neutral-600 mt-2 text-base">
+                  Keep tabs on rides in a clean, minimal view.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: image with button below */}
+          <div className="flex flex-col h-full">
+            <div className="relative flex-1 w-full overflow-hidden rounded-2xl border border-neutral-200 mt-2 shadow-lg">
+              <img
+                src={bookRide}
+                alt="Rides preview"
+                className="h-full w-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+              />
+            </div>
+            <Button
+              className="mt-2 bg-black text-[#D4AF37]  h-11 rounded-xl font-semibold transition-all duration-300 hover:shadow-[0_0_6px_#D4AF37] hover:scale-105"
+              onClick={() => navigate("/select-shift")}
+            >
+              Book a ride
+            </Button>
+          </div>
         </div>
+
+        {/* shimmer */}
+        <style>{`
+          @keyframes shimmer {
+            0% {
+              background-position: -200% 0;
+            }
+            100% {
+              background-position: 200% 0;
+            }
+          }
+          .shimmer-text {
+            background: linear-gradient(90deg, #000 25%, ${GOLD} 50%, #000 75%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 6s linear infinite;
+          }
+        `}</style>
       </div>
 
-      {/* Dynamic Trip Statistics by Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* STATUS OVERVIEW */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {uniqueStatuses.map((status) => {
-          const config = getStatusConfig(status);
+          const meta = getStatusConfig(status);
+          const Icon = meta.icon;
           return (
             <Card
               key={status}
-              className={`glass-card border-2 shadow-xl p-4 ${
-                config.color.split(" ")[0]
-              } backdrop-blur-md bg-opacity-70`}
+              className="border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-transform duration-200 hover:-translate-y-0.5"
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg ${
-                    config.color.split(" ")[1]
-                  }`}
-                >
-                  {config.icon}
-                </div>
-                <div>
-                  <h3
-                    className={`font-bold text-lg ${
-                      config.color.split(" ")[1]
-                    }`}
-                  >
-                    {config.label}
-                  </h3>
-                  <p className="text-3xl font-extrabold text-gray-100 drop-shadow">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{Icon}</span>
+                    <span className="text-base font-semibold text-black">
+                      {meta.label}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold text-[#D4AF37]">
                     {statusCounts[status]}
-                  </p>
+                  </div>
                 </div>
-              </div>
+              </Card>
             </Card>
           );
         })}
       </div>
 
-      {/* Trip List */}
-      <div className="space-y-6">
-        {isLoading ? (
-          <div className="text-gray-400 text-center text-xl animate-pulse">
-            Loading trips...
-          </div>
-        ) : trips.length === 0 ? (
-          <div className="text-gray-400 text-center text-xl">
-            No trips for this event.
-          </div>
-        ) : (
-          trips.map((trip, index) => {
-            const statusConfig = getStatusConfig(trip.status);
-            return (
-              <Card
-                key={trip.id}
-                className="glass-card hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 border-gold-500/30 bg-slate-800/80 backdrop-blur-md shadow-lg"
+      {/* ACTIVE TRIPS */}
+      <Card className="border border-neutral-200 bg-white shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-3">
+            <div className="bg-black p-2 rounded-xl">
+              <Car className="h-6 w-6" color={GOLD} />
+            </div>
+            <div>
+              <CardTitle
+                className="text-4xl font-extrabold tracking-tight"
+                style={{ color: "black" }}
               >
-                <div className="flex items-center gap-8 p-8">
-                  {/* Timeline indicator */}
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`w-14 h-14 rounded-full border-4 ${statusConfig.color
-                        .replace("bg-", "border-")
-                        .replace(
-                          "-500/20",
-                          "-500/50"
-                        )} bg-gray-900 flex items-center justify-center text-2xl gold-glow shadow-lg`}
-                    >
-                      {statusConfig.icon}
-                    </div>
-                    {index < trips.length - 1 && (
-                      <div className="w-1 h-16 bg-gradient-to-b from-yellow-400/30 to-blue-500/30 mt-2"></div>
-                    )}
-                  </div>
+                Active trips
+              </CardTitle>
+              <p className="text-sm text-neutral-500 -mt-0.5">
+                Tap a trip for details, support, or follow-up.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
 
-                  {/* Trip details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-bold text-gray-100 mb-1 flex items-center gap-2 text-xl">
-                          {trip.name}
-                          <Badge
-                            variant="outline"
-                            className="bg-gray-900 px-2 py-1 border-emerald-500/30 text-emerald-400 flex items-center gap-1 shadow"
-                          >
-                            <CallIcon
-                              style={{ fontSize: 16 }}
-                              className="mr-1"
-                            />
-                            {trip.clientPhone !== "-" ? trip.clientPhone : "-"}
-                          </Badge>
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-400 flex-wrap">
-                          <Badge
-                            variant="outline"
-                            className="bg-gray-900 px-2 py-1 border-gold-500/30 text-gold-400 shadow"
-                          >
-                            {trip.id}
-                          </Badge>
-                          {trip.status != "PENDING" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-900 px-2 py-1 border-gold-500/30 text-gold-400 shadow"
-                            >
-                              {trip.carNumber !== "-"
-                                ? `VH-${trip.carNumber}`
-                                : "-"}
-                            </Badge>
-                          )}
-                          {trip.status != "PENDING" && (
-                            <Badge
-                              variant="outline"
-                              className="bg-gray-900 px-2 py-1 border-blue-500/30 text-blue-400 shadow"
-                            >
-                              {trip.driverNumber !== "-"
-                                ? `DR-${trip.driverNumber}`
-                                : "-"}
-                            </Badge>
-                          )}
-                          {trip.status != "PENDING" && (
-                            <div className="flex items-center gap-1">
-                              <User className="w-4 h-4 text-gold-400" />
-                              {trip.driverName}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Car className="w-4 h-4 text-gold-400" />
-                            {trip.carModel}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-gold-400" />
-                            {trip.dateTime}
-                          </div>
-                        </div>
-                      </div>
-                      <Badge
-                        className={`px-4 py-2 text-base font-bold border ${statusConfig.color} shadow`}
-                      >
-                        {statusConfig.label}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
-                        <div>
-                          <p className="text-xs text-gray-400">
-                            Pickup Location
-                          </p>
-                          <p className="text-base font-medium text-gray-200">
-                            {trip.location}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                        <div>
-                          <p className="text-xs text-gray-400">Destination</p>
-                          <p className="text-base font-medium text-gray-200">
-                            {trip.destination}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gold-400" />
-                        <div>
-                          <p className="text-xs text-gray-400">Pickup Time</p>
-                          <p className="text-base font-medium text-gray-200">
-                            {trip.pickupTime}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    {trip.status != "PENDING" && (
-                      <div className="flex gap-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-gold-500/30 text-gold-400 hover:bg-gray-800/50 shadow"
-                          onClick={() => setDetailsRide(trip)}
-                        >
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          Details
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })
-        )}
-      </div>
-      <div className="flex justify-end mt-10">
-        <Button
-          className="bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white font-semibold py-3 px-8 rounded-xl shadow-xl text-lg transition-all duration-200"
-          onClick={() => navigate("/")}
-        >
-          Book a new ride
-        </Button>
-      </div>
-
-      <Dialog
-        open={!!detailsRide}
-        onOpenChange={(open) => !open && setDetailsRide(null)}
-      >
-        <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 border-0 shadow-2xl rounded-2xl p-8 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-extrabold bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">
-              Ride Details
-            </DialogTitle>
-          </DialogHeader>
-          {detailsRide ? (
-            <div className="space-y-6">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 bg-slate-700 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-3xl font-extrabold text-yellow-400">
-                    {detailsRide.driverName
-                      ?.split(" ")
-                      .map((n: string) => n[0])
-                      .join("")}
-                  </span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-blue-300">
-                      {detailsRide.driverName}
-                    </span>
-                    <span className="bg-green-600 text-white text-sm font-bold px-3 py-1 rounded ml-2 shadow">
-                      DR-{detailsRide.driverNumber}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-blue-200 font-semibold">
-                      {detailsRide.carModel}
-                    </span>
-                    <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded shadow">
-                      {detailsRide.carId}
-                    </span>
-                    {detailsRide.car?.licensePlate && (
-                      <span className="bg-slate-700 text-yellow-300 text-xs font-bold px-2 py-0.5 rounded shadow ml-2">
-                        Plate: {detailsRide.car.licensePlate}
-                      </span>
-                    )}
-                    {detailsRide.car?.color && (
-                      <span
-                        className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full border-2 border-slate-700 shadow"
-                        style={{ backgroundColor: detailsRide.car.color }}
-                        title={detailsRide.car.color}
-                      >
+        <CardContent>
+          <div className="space-y-4">
+            {trips.map((trip) => {
+              const meta = getStatusConfig(trip.status);
+              const StatusIcon = meta.icon;
+              return (
+                <div
+                  key={trip.id}
+                  className="group p-5 bg-white border border-neutral-200 rounded-xl shadow-sm transition-transform duration-300 ease-out hover:scale-[1.015] hover:shadow-xl"
+                >
+                  {/* Client box */}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                    <div className="bg-neutral-100 border border-neutral-200 rounded-2xl px-4 py-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="w-3 h-3 rounded-full border border-white inline-block"
-                          style={{ backgroundColor: detailsRide.car.color }}
-                        ></span>
-                        <span className="text-xs font-bold text-white drop-shadow">
-                          Color
+                          className="text-[11px] uppercase tracking-wide font-semibold"
+                          style={{ color: GOLD }}
+                        >
+                          Client
                         </span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-blue-200 text-base mt-2">
-                    Phone:{" "}
-                    <span className="text-white font-semibold">
-                      {detailsRide.driver?.phoneNumber}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-slate-800/80 rounded-xl p-6 mb-4 shadow-lg">
-                <h3 className="text-yellow-300 font-bold mb-3 text-xl">
-                  Trip Details
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Clock className="w-5 h-5 text-yellow-400 mr-2" />
-                      <span className="text-blue-200 font-medium">
-                        Estimated trip time
-                      </span>
+                        <span className="text-lg font-bold leading-tight">
+                          {trip.name}
+                        </span>
+                        <span className="text-neutral-300">•</span>
+                        <span className="text-base text-neutral-700 leading-tight">
+                          {trip.clientPhone}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-white font-bold">10 minutes</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <MapPin className="w-5 h-5 text-yellow-400 mr-2" />
-                      <span className="text-blue-200 font-medium">
-                        Arrival time
-                      </span>
+
+                    <div className="flex items-center gap-3">
+                      {/* Date chip */}
+                      <div className="inline-flex items-center gap-1.5 text-sm text-neutral-700 bg-neutral-100 border border-neutral-200 rounded-md px-2.5 py-1.5 font-normal">
+                        <CalendarDays className="h-4 w-4" color={GOLD} />
+                        <span>{trip.dateTime}</span>
+                      </div>
+
+                      {/* Status chip */}
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-neutral-300 font-extrabold">
+                        <span className="text-neutral-800">{meta.label}</span>
+                      </div>
                     </div>
-                    <span className="text-white font-bold">
-                      {detailsRide.raw.pickupTime || "-"}
+                  </div>
+
+                  {/* Route */}
+                  <div className="flex flex-col md:flex-row md:items-stretch gap-3 mb-3">
+                    <div className="flex-1 border border-neutral-200 rounded-lg p-3 bg-neutral-50">
+                      <div className="flex items-center gap-2 text-neutral-900 text-base">
+                        <MapPin className="h-4 w-4" color={GOLD} />
+                        <span className="font-semibold">Pickup</span>
+                      </div>
+                      <p className="text-sm text-neutral-700 mt-1">
+                        {trip.location}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-neutral-700 mt-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span className="font-medium">Pickup time:</span>
+                        <span>{trip.pickupTime}</span>
+                      </div>
+                    </div>
+                    <div className="hidden md:flex items-center justify-center px-1">
+                      <ArrowRight className="h-5 w-5" color={GOLD} />
+                    </div>
+                    <div className="flex-1 border border-neutral-200 rounded-lg p-3 bg-neutral-50">
+                      <div className="flex items-center gap-2 text-neutral-900 text-base">
+                        <MapPin className="h-4 w-4" color={GOLD} />
+                        <span className="font-semibold">Destination</span>
+                      </div>
+                      <p className="text-sm text-neutral-700 mt-1">
+                        {trip.destination}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Driver */}
+                  <div className="flex items-center gap-2 text-base text-neutral-900">
+                    <User className="h-5 w-5" color={GOLD} />
+                    <span className="font-semibold">{trip.driverName}</span>
+                    <span className="text-neutral-400 text-sm">
+                      ({trip.driverNumber})
                     </span>
+                    <span className="text-neutral-300">•</span>
+                    <Phone className="h-5 w-5" color={GOLD} />
+                    <a href={`tel:${trip.clientPhone}`} className="underline">
+                      {trip.clientPhone}
+                    </a>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-neutral-500 text-xs mt-3">
+                    <div className="flex items-center gap-1">
+                      <Hash className="h-3 w-3" />
+                      <span className="font-medium">Trip ID:</span>
+                      <span>{trip.id}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-9 px-4 bg-black text-[#D4AF37]  text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-[0_0_6px_#D4AF37] hover:scale-105 "
+                      onClick={() => setDetailsRide(trip)}
+                    >
+                      More details
+                    </Button>
                   </div>
                 </div>
-              </div>
-              <div className="bg-gradient-to-r from-blue-800/80 to-slate-800/80 rounded-xl p-6 mb-4 flex items-center shadow-lg">
-                <Shield className="w-6 h-6 text-yellow-400 mr-4" />
-                <div>
-                  <h4 className="text-white font-bold text-lg">
-                    Trip Protected
-                  </h4>
-                  <p className="text-blue-200 text-base">
-                    24/7 support & safety features
-                  </p>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {detailsRide && (
+        <Dialog open={true} onOpenChange={() => setDetailsRide(null)}>
+          <DialogContent className="max-w-md bg-white text-black border border-neutral-200 rounded-2xl shadow-xl">
+            <DialogHeader className="border-b border-neutral-200 pb-3 mb-3">
+              <DialogTitle
+                className="text-3xl font-extrabold tracking-tight"
+                style={{ color: "black" }}
+              >
+                Trip details
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 text-base">
+              {/* Date & Status */}
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 text-base text-neutral-700 bg-neutral-100 border border-neutral-200 rounded-lg px-3 py-1.5">
+                  <CalendarDays className="h-4 w-4" color={GOLD} />
+                  <span>{detailsRide.dateTime}</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neutral-300 text-base font-medium">
+                  {(() => {
+                    const Icon = getStatusConfig(detailsRide.status).icon;
+                    return <span className="text-2xl">{Icon}</span>;
+                  })()}
+                  <span>{getStatusConfig(detailsRide.status).label}</span>
                 </div>
               </div>
-              <div className="text-center mt-3">
-                <p className="text-blue-200 text-lg">
-                  Trip ID:{" "}
-                  <span className="text-yellow-300 font-mono font-bold">
-                    {detailsRide.raw.id}
+
+              {/* Client */}
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                <p
+                  className="text-xs uppercase tracking-wide mb-1"
+                  style={{ color: GOLD }}
+                >
+                  Client
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-bold">{detailsRide.name}</span>
+                  <span className="text-neutral-300">•</span>
+                  <span className="text-base text-neutral-700">
+                    {detailsRide.clientPhone}
                   </span>
+                </div>
+              </div>
+
+              {/* Driver */}
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                <p
+                  className="text-xs uppercase tracking-wide mb-1"
+                  style={{ color: GOLD }}
+                >
+                  Driver
+                </p>
+                <div className="flex items-center gap-2 text-base text-neutral-900">
+                  <User className="h-4 w-4" color={GOLD} />
+                  <span className="font-semibold">
+                    {detailsRide.driverName} ({detailsRide.driverNumber})
+                  </span>
+                  <span className="text-neutral-300">•</span>
+                  <Phone className="h-4 w-4" color={GOLD} />
+                  <a
+                    href={`tel:${detailsRide.clientPhone}`}
+                    className="underline"
+                  >
+                    {detailsRide.clientPhone}
+                  </a>
+                </div>
+              </div>
+
+              {/* Vehicle */}
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+                <p
+                  className="text-xs uppercase tracking-wide mb-1"
+                  style={{ color: GOLD }}
+                >
+                  Vehicle
+                </p>
+                <div className="flex items-center gap-2 text-base text-neutral-900 font-medium">
+                  <Car className="h-4 w-4" color={GOLD} />
+                  <span>
+                    {detailsRide.carModel} ({detailsRide.carId}) • Plate:{" "}
+                    {detailsRide.carNumber}
+                  </span>
+                </div>
+              </div>
+
+              {/* Time info */}
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 space-y-1">
+                <p
+                  className="text-xs uppercase tracking-wide"
+                  style={{ color: GOLD }}
+                >
+                  Timing
+                </p>
+                <p className="text-base font-medium text-neutral-900">
+                  Estimated trip time: {detailsRide.pickupTime}
+                </p>
+                <p className="text-base text-neutral-700">
+                  Arrival time: {detailsRide.dateTime}
                 </p>
               </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between text-sm text-neutral-500 pt-2 border-t border-neutral-200">
+                <span>Trip ID: {detailsRide.id}</span>
+                <Button
+                  size="sm"
+                  className="h-9 bg-black text-[#D4AF37] hover:bg-[${GOLD}] hover:text-black transition-colors text-sm font-medium"
+                  onClick={() => setDetailsRide(null)}
+                >
+                  Close
+                </Button>
+              </div>
             </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

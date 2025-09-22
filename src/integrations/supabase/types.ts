@@ -201,24 +201,30 @@ export type Database = {
       ShiftManagers: {
         Row: {
           id: number;
-          name: string;
+          fisrtName: string;
+          lastName: string;
           password: string;
           phoneNumber: string;
           email: string;
+          event_id: number;
         };
         Insert: {
           id?: number;
-          name: string;
+          firstName: string;
+          lastName: string;
           password: string;
           phoneNumber: string;
           email: string;
+          event_id: number;
         };
         Update: {
           id?: number;
-          name?: string;
+          firstName?: string;
+          lastName?: string;
           password?: string;
           phoneNumber?: string;
           email?: string;
+          event_id?: number;
         };
       };
     };

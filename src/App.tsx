@@ -23,6 +23,7 @@ import SelectShift from "./pages/SelectShift";
 import AuthPage from "./pages/AuthPage";
 import SignOutButton from "./components/SignOutButton";
 import { TripTracking } from "./pages/RideRequests";
+import { Header } from "./components/Header";
 
 const queryClient = new QueryClient();
 
@@ -53,17 +54,13 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Header
+      onSignOut={handleSignOut}
+       />
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          {(() => {
-            const location = window.location.pathname;
-            if (location === "/ride-requests") {
-              return <SignOutButton onSignOut={handleSignOut} />;
-            }
-            return null;
-          })()}
           <div className="min-h-screen bg-slate-900">
             <Routes>
               <Route
