@@ -80,7 +80,7 @@ const TripDetailsForm: React.FC<
         <div className="space-y-6">
           {/* From Section */}
           <div>
-            <label className="text-white font-medium mb-2 block">From</label>
+            <label className="text-white font-medium mb-2 block">Select hub</label>
             <div className="space-y-4">
               {!isAirportArrival && (
                 <>
@@ -94,9 +94,6 @@ const TripDetailsForm: React.FC<
                       if (hub) {
                         updateBookingData({
                           pickupHub: hub,
-                          pickupLocation: hub.address,
-                          pickupLat: hub.latitude,
-                          pickupLng: hub.longitude,
                         });
                       }
                     }}
@@ -116,21 +113,18 @@ const TripDetailsForm: React.FC<
                     ))}
                   </select>
                   <LocationPicker
-                    label="Or enter a place..."
+                    label="From"
                     value={
-                      bookingData.pickupHub
-                        ? ""
-                        : bookingData.pickupLocation || ""
+                      bookingData.pickupLocation || ""
                     }
                     onChange={(location) => {
                       updateBookingData({
                         pickupLocation: location.address,
                         pickupLat: location.lat,
                         pickupLng: location.lng,
-                        pickupHub: undefined,
                       });
                     }}
-                    placeholder="Or enter a place..."
+                    placeholder="Enter a place"
                     showCurrentLocation={false}
                   />
                 </>

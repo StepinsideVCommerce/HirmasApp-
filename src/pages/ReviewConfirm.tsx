@@ -17,7 +17,7 @@ import { useBookingFlow } from "@/hooks/useBookingFlow";
 const ReviewConfirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { bookingData ,updateBookingData,clearBookingData} = useBookingFlow();
+  const { bookingData, updateBookingData, clearBookingData } = useBookingFlow();
   const event = location.state?.event;
   const shiftManagerStr = sessionStorage.getItem("shiftManager");
   const shiftManager = shiftManagerStr ? JSON.parse(shiftManagerStr) : null;
@@ -29,31 +29,31 @@ const ReviewConfirm = () => {
   const handleConfirm = async () => {
     // Insert into PendingRides
     try {
-    const { data, error } = await hermasAdminSupabase
-  .from("PendingRides")
-  .insert([
-    {
-      carType: bookingData.carType,
-      hub_id: bookingData.pickupHub?.id,
-      dropOffLocation: bookingData.dropoffLocation,
-      guestCategory: bookingData.guestCategory,
-      guestName: bookingData.guestName,
-      phoneNumber: bookingData.phoneNumber,
-      shift_id: bookingData.shift?.id,
-      pickupTime: bookingData.pickupTime,
-      serviceType: bookingData.serviceType,
-      event_id: event?.id,
-      shift_manager_id: shiftManagerId,
-      pickupLocation: bookingData.pickupLocation,
-      pickupLat: bookingData.pickupLat,
-      pickupLng: bookingData.pickupLng,
-      dropoffLat: bookingData.dropoffLat,
-      dropoffLng: bookingData.dropoffLng,
-      pickup_note: bookingData.pickupNote,
-      dropoff_note: bookingData.dropoffNote,
-    },
-  ])
-  .select();
+      const { data, error } = await hermasAdminSupabase
+        .from("PendingRides")
+        .insert([
+          {
+            carType: bookingData.carType,
+            hub_id: bookingData.pickupHub?.id,
+            dropOffLocation: bookingData.dropoffLocation,
+            guestCategory: bookingData.guestCategory,
+            guestName: bookingData.guestName,
+            phoneNumber: bookingData.phoneNumber,
+            shift_id: bookingData.shift?.id,
+            pickupTime: bookingData.pickupTime,
+            serviceType: bookingData.serviceType,
+            event_id: event?.id,
+            shift_manager_id: shiftManagerId,
+            pickupLocation: bookingData.pickupLocation,
+            pickupLat: bookingData.pickupLat,
+            pickupLng: bookingData.pickupLng,
+            dropoffLat: bookingData.dropoffLat,
+            dropoffLng: bookingData.dropoffLng,
+            pickup_note: bookingData.pickupNote,
+            dropoff_note: bookingData.dropoffNote,
+          },
+        ])
+        .select();
       if (error) {
         alert("Booking Failed: " + error.message);
         return;
@@ -62,6 +62,35 @@ const ReviewConfirm = () => {
       if (data && data[0] && data[0].id) {
         sessionStorage.setItem("pendingRideId", data[0].id.toString());
       }
+      await fetch(
+        "https://7105.api.greenapi.com/waInstance7105311928/sendMessage/1aab495040c54e47b3f15e9aeca87cd5eb9d99cb2d8b43ff95",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatId: `${bookingData.pickupHub.shift_manager_phone.slice(
+              1
+            )}@c.us`,
+            message: `مرحبًا ${bookingData.pickupHub.shift_manager_name} 👋
+
+🚗 تم حجز رحلة جديدة 🎉
+
+📍 *نقطة الانطلاق:* ${bookingData.pickupLocation || "غير محدد"}
+🏁 *الوجهة:* ${bookingData.dropoffLocation || "غير محدد"}
+🗓️ *التاريخ:* ${bookingData.pickupDate || "اليوم"}
+⏰ *الوقت:* ${bookingData.pickupTime || "في أقرب وقت"}
+👤 *الضيف:* ${bookingData.guestName || "غير معروف"} (${
+              bookingData.phoneNumber || "N/A"
+            })
+👥 *عدد الركاب:* ${bookingData.passengerCount || 1}
+🚘 *نوع السيارة:* ${bookingData.carType || "غير محدد"}
+
+من فضلك قم بتسجيل الدخول إلى التطبيق وتعيين سائق لهذه الرحلة ✅`,
+            linkPreview: false,
+          }),
+        }
+      );
+
       clearBookingData();
       navigate("/searching", { state: { event } });
     } catch (err) {

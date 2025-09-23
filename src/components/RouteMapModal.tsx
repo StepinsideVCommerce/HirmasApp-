@@ -33,6 +33,8 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [routeDistanceText, setRouteDistanceText] = useState<string>("");
+  const [routeDurationText, setRouteDurationText] = useState<string>("");
   const { isLoaded } = useGoogleMapsApi();
 
   const geocodeAndShowMarkers = useCallback(
@@ -182,6 +184,8 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
 
     setIsLoading(true);
     setError(null);
+    setRouteDistanceText("");
+    setRouteDurationText("");
 
     try {
       const mapInstance = new google.maps.Map(mapRef.current, {
@@ -261,6 +265,32 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
           if (status === "OK" && result) {
             directionsRenderer.setDirections(result);
             console.log("Route successfully displayed");
+
+            // Extract total distance and duration across all legs
+            const route = result.routes?.[0];
+            const legs = route?.legs || [];
+            if (legs.length) {
+              const totalMeters = legs.reduce(
+                (sum, leg) => sum + (leg.distance?.value || 0),
+                0
+              );
+              const totalSeconds = legs.reduce(
+                (sum, leg) => sum + (leg.duration?.value || 0),
+                0
+              );
+
+              const km = totalMeters / 1000;
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.ceil((totalSeconds % 3600) / 60);
+
+              const distanceText = km >= 1 ? `${km.toFixed(1)} km` : `${totalMeters} m`;
+              const durationText = hours
+                ? `${hours} hr ${minutes} min`
+                : `${minutes} min`;
+
+              setRouteDistanceText(distanceText);
+              setRouteDurationText(durationText);
+            }
           } else {
             console.warn(
               "Directions API failed, but markers are still visible:",
@@ -344,6 +374,21 @@ const RouteMapModal: React.FC<RouteMapModalProps> = ({
               <div className="w-3 h-3 rounded-full bg-red-500"></div>
               <span className="text-slate-300 truncate">{dropoffLocation}</span>
             </div>
+
+            {(routeDistanceText || routeDurationText) && (
+              <div className="flex items-center gap-2 pt-2">
+                {routeDistanceText && (
+                  <div className="inline-flex items-center px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-slate-200 text-xs">
+                    Distance: {routeDistanceText}
+                  </div>
+                )}
+                {routeDurationText && (
+                  <div className="inline-flex items-center px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-slate-200 text-xs">
+                    Duration: {routeDurationText}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

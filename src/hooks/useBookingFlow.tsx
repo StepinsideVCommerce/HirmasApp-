@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { defaultDialCode } from "@/data/countryDialCodes";
 
 export interface BookingData {
   pickupLocation: string;
@@ -13,6 +14,7 @@ export interface BookingData {
   secondFromLocation?: string; // New field for the second from location
   guestName: string;
   phoneNumber: string;
+  phoneCountryCode: string;
   guestCategory: string;
   carType: string;
   car?: any; // Add car object to booking data
@@ -34,7 +36,11 @@ export const useBookingFlow = () => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (!parsed.phoneCountryCode) {
+          parsed.phoneCountryCode = defaultDialCode;
+        }
+        return parsed;
       } catch (error) {
         console.error("Error parsing stored booking data:", error);
       }
@@ -46,6 +52,7 @@ export const useBookingFlow = () => {
       secondFromLocation: "",
       guestName: "",
       phoneNumber: "",
+      phoneCountryCode: defaultDialCode,
       guestCategory: "other",
       carType: "",
       serviceType: "Single Trip",
@@ -93,6 +100,7 @@ export const useBookingFlow = () => {
       secondFromLocation: "",
       guestName: "",
       phoneNumber: "",
+      phoneCountryCode: defaultDialCode,
       guestCategory: "other",
       carType: "",
       serviceType: "Single Trip",

@@ -174,7 +174,7 @@ export function TripTracking() {
       carModel: ride.carType || "-",
       status: ride.status || "-",
       dateTime: shift?.date ? `${shift.date}` : "",
-      location: hub?.address || ride.pickupLocation || "-",
+      location: ride.pickupLocation || "-",
       destination: ride.dropOffLocation || "-",
       clientPhone: ride.phoneNumber || "-",
       pickupTime: ride.pickupTime || "-",
@@ -185,6 +185,29 @@ export function TripTracking() {
       hub,
     };
   });
+
+  // Sort trips by desired status order
+  const statusPriority: Record<string, number> = {
+    ASSIGNED: 0,
+    WAITING: 1,
+    STARTED: 2,
+    ARRIVED_TO_DESTINATION: 3,
+    BACK: 4,
+    End: 5, // Completed
+    PENDING: 6,
+  };
+
+  const sortedTrips = useMemo(() => {
+    return [...trips].sort((a, b) => {
+      const aKey = (a.status || "").toString();
+      const bKey = (b.status || "").toString();
+      const aRank = statusPriority[aKey as keyof typeof statusPriority] ?? 99;
+      const bRank = statusPriority[bKey as keyof typeof statusPriority] ?? 99;
+      if (aRank !== bRank) return aRank - bRank;
+      // Optional secondary sort: by date/time or id
+      return (a.id || "").localeCompare(b.id || "");
+    });
+  }, [trips]);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -365,7 +388,7 @@ export function TripTracking() {
 
         <CardContent>
           <div className="space-y-4">
-            {trips.map((trip) => {
+            {sortedTrips.map((trip) => {
               const meta = getStatusConfig(trip.status);
               const StatusIcon = meta.icon;
               return (
@@ -568,10 +591,7 @@ export function TripTracking() {
                   Timing
                 </p>
                 <p className="text-base font-medium text-neutral-900">
-                  Estimated trip time: {detailsRide.pickupTime}
-                </p>
-                <p className="text-base text-neutral-700">
-                  Arrival time: {detailsRide.dateTime}
+                  Arrival time: {detailsRide.pickupTime}
                 </p>
               </div>
 

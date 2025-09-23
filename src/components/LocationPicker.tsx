@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MapPin, X, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [showPredictions, setShowPredictions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const geocodeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autocompleteService =
     useRef<google.maps.places.AutocompleteService | null>(null);
   const geocoder = useRef<google.maps.Geocoder | null>(null);
@@ -49,26 +50,50 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     }
   }, [isLoaded]);
 
-  const handleInputChange = (inputValue: string) => {
-    console.log("LocationPicker - handleInputChange:", { label, inputValue });
-    if (geocoder.current && inputValue.trim()) {
-      geocoder.current.geocode({ address: inputValue }, (results, status) => {
+  useEffect(() => {
+    return () => {
+      if (geocodeDebounceRef.current) {
+        clearTimeout(geocodeDebounceRef.current);
+      }
+    };
+  }, []);
+
+  const geocodeAddress = useCallback(
+    (address: string) => {
+      if (!geocoder.current || !address.trim()) {
+        return;
+      }
+
+      geocoder.current.geocode({ address }, (results, status) => {
         if (status === "OK" && results?.[0]) {
+          if (inputRef.current && inputRef.current.value !== address) {
+            return;
+          }
           const loc = results[0].geometry.location;
-          onChange({ address: inputValue, lat: loc.lat(), lng: loc.lng() });
-        } else {
-          onChange({ address: inputValue });
+          onChange({ address, lat: loc.lat(), lng: loc.lng() });
         }
       });
-    } else {
-      onChange({ address: inputValue });
+    },
+    [onChange]
+  );
+
+  const handleInputChange = (inputValue: string) => {
+    onChange({ address: inputValue });
+
+    if (geocodeDebounceRef.current) {
+      clearTimeout(geocodeDebounceRef.current);
     }
 
     if (!autocompleteService.current || !inputValue.trim()) {
+      setIsLoading(false);
       setPredictions([]);
       setShowPredictions(false);
       return;
     }
+
+    geocodeDebounceRef.current = setTimeout(() => {
+      geocodeAddress(inputValue);
+    }, 400);
 
     setIsLoading(true);
 

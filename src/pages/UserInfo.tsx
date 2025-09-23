@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -7,21 +7,61 @@ import {
   Users,
   Crown,
   Briefcase,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
-import { useToast } from "@/hooks/use-toast";
+import {
+  countryDialCodes,
+  defaultDialCode,
+} from "@/data/countryDialCodes";
 
 const UserInfo = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const event = location.state?.event;
   const { bookingData, updateBookingData } = useBookingFlow();
-  const { toast } = useToast();
   const [passengers, setPassengers] = useState(bookingData.passengerCount || 1);
+  const [localPhoneNumber, setLocalPhoneNumber] = useState<string>("");
+
+  useEffect(() => {
+    const code = bookingData.phoneCountryCode || defaultDialCode;
+    if (bookingData.phoneNumber?.startsWith(code)) {
+      setLocalPhoneNumber(bookingData.phoneNumber.slice(code.length));
+    } else {
+      setLocalPhoneNumber(bookingData.phoneNumber || "");
+    }
+  }, [bookingData.phoneCountryCode, bookingData.phoneNumber]);
+
+  const groupedCountries = useMemo(() => {
+    return [...countryDialCodes].sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const handleCountryCodeChange = (dialCode: string) => {
+    updateBookingData({
+      phoneCountryCode: dialCode,
+      phoneNumber: localPhoneNumber
+        ? `${dialCode}${localPhoneNumber}`
+        : "",
+    });
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const normalized = value.replace(/[^0-9]/g, "");
+    setLocalPhoneNumber(normalized);
+    updateBookingData({
+      phoneNumber: normalized
+        ? `${bookingData.phoneCountryCode || defaultDialCode}${normalized}`
+        : "",
+    });
+  };
 
   const handlePassengerCountChange = (change: number) => {
     const newCount = Math.min(Math.max(1, passengers + change), 10);
@@ -69,75 +109,11 @@ const UserInfo = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-white">Passenger Details</h1>
-            <p className="text-slate-400 text-sm">Tell us about your trip</p>
-          </div>
           <div className="w-10"></div>
         </div>
       </div>
 
       <div className="px-4 space-y-6">
-        {/* Trip Summary Card */}
-        <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 backdrop-blur-md rounded-xl p-6 border border-yellow-500/20">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
-            Trip Overview
-          </h2>
-
-          <div className="space-y-3">
-            {/* Pickup Location */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                <span className="text-slate-400">From:</span>
-              </div>
-              <span className="text-white font-medium text-right flex-1 ml-4 truncate">
-                {bookingData.pickupLocation || "Not set"}
-              </span>
-            </div>
-
-            {/* First Stop (only for multiple trips) */}
-            {bookingData.serviceType === "Multiple Trip" && (
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
-                  <span className="text-slate-400">First Stop:</span>
-                </div>
-                <span className="text-white font-medium text-right flex-1 ml-4 truncate">
-                  {bookingData.firstStopLocation || "Not set"}
-                </span>
-              </div>
-            )}
-
-            {/* Final Destination */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-slate-400">
-                  {bookingData.serviceType === "Multiple Trip"
-                    ? "Final Destination:"
-                    : "To:"}
-                </span>
-              </div>
-              <span className="text-white font-medium text-right flex-1 ml-4 truncate">
-                {bookingData.dropoffLocation || "Not set"}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Vehicle:</span>
-              <span className="text-white font-medium">
-                {bookingData.carType
-                  ? bookingData.carType
-                      .replace(/-/g, " ")
-                      .replace(/\b\w/g, (l: string) => l.toUpperCase())
-                  : "Not selected"}
-              </span>
-            </div>
-          </div>
-        </div>
 
         {/* Passenger Information Card */}
         <div className="bg-slate-800/50 backdrop-blur-md rounded-xl p-6">
@@ -158,57 +134,68 @@ const UserInfo = () => {
           </div>
 
           {/* Guest Name Input */}
-          <div className="mb-6">
-            <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
+          <div className="mb-6 space-y-2">
+            <label htmlFor="fullName" className="text-sm font-medium text-slate-300">
+              Full Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-500 w-5 h-5" />
               <Input
                 id="fullName"
                 value={bookingData.guestName || ""}
                 onChange={(e) =>
                   updateBookingData({ guestName: e.target.value })
                 }
-                className="h-14 bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-2"
-                placeholder=" "
+                className="h-16 bg-slate-900/60 border border-slate-600 text-white text-xl pl-12 pr-4 rounded-xl focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0"
+                placeholder="Enter full name"
               />
-              <label
-                htmlFor="fullName"
-                className={`absolute left-2 transition-all duration-300 pointer-events-none ${
-                  bookingData.guestName
-                    ? "text-xs -top-2 text-yellow-500 font-medium"
-                    : "text-slate-400 top-4 text-lg"
-                }`}
-              >
-                Full Name
-              </label>
             </div>
           </div>
 
           {/* Phone Number Input */}
-          <div className="mb-6">
-            <div className="relative border-b-2 border-slate-700 focus-within:border-yellow-500 transition-all duration-300">
-              <div className="absolute left-2 top-4 text-slate-400 font-medium">
-                🇸🇦 +966
-              </div>
-              <Input
-                id="phoneNumber"
-                value={bookingData.phoneNumber || ""}
-                onChange={(e) =>
-                  updateBookingData({ phoneNumber: e.target.value })
-                }
-                className="h-14 bg-transparent border-none shadow-none text-white text-lg focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-[90px]"
-                placeholder="501234567"
-                type="tel"
-              />
-              <label
-                htmlFor="phoneNumber"
-                className={`absolute left-[90px] transition-all duration-300 pointer-events-none ${
-                  bookingData.phoneNumber
-                    ? "text-xs -top-2 text-yellow-500 font-medium"
-                    : "text-slate-400 opacity-0"
-                }`}
+          <div className="mb-6 space-y-2">
+            <label htmlFor="phoneNumber" className="text-sm font-medium text-slate-300">
+              Phone Number
+            </label>
+            <div className="flex gap-3 flex-col sm:flex-row">
+              <Select
+                value={bookingData.phoneCountryCode || defaultDialCode}
+                onValueChange={handleCountryCodeChange}
               >
-                Phone Number
-              </label>
+                <SelectTrigger className="h-16 bg-slate-900/60 border border-slate-600 text-white text-lg rounded-xl sm:w-56">
+                  <SelectValue placeholder="Country code" />
+                </SelectTrigger>
+                <SelectContent className="max-h-80 bg-slate-900 border border-slate-700 text-white shadow-xl">
+                  {groupedCountries.map((country) => (
+                    <SelectItem
+                      key={country.isoCode}
+                      value={country.dialCode}
+                      className="text-white data-[highlighted]:bg-slate-700 data-[state=checked]:bg-slate-700 focus:bg-slate-700 focus:text-white"
+                    >
+                      {country.name} ({country.dialCode})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative flex-1">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-500 w-5 h-5" />
+                <Input
+                  id="phoneNumber"
+                  value={localPhoneNumber}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  className="h-16 bg-slate-900/60 border border-slate-600 text-white text-xl pl-12 pr-4 rounded-xl focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-0"
+                  placeholder="Enter phone number"
+                  type="tel"
+                  inputMode="tel"
+                />
+              </div>
             </div>
+            <p className="text-xs text-slate-400">
+              Stored number: {`${
+                bookingData.phoneCountryCode || defaultDialCode
+              }${localPhoneNumber ? ` ${localPhoneNumber}` : ""}`}
+            </p>
           </div>
 
           {/* Guest Category */}

@@ -248,11 +248,17 @@ const SelectShift = () => {
   };
 
   // Handle time selection
-  // Handle time selection
-  const handleTimeSelect = (timeObj: { hour: string; minute: string }) => {
-    setSelectedTime(timeObj);
-    updateBookingData({ pickupTime: `${timeObj.hour}:${timeObj.minute}` });
-    handleContinue();
+  const handleTimeSelect = async (timeObj: {
+    hour: string;
+    minute: string;
+  }) => {
+    console.log("Selected time:", timeObj);
+    const time = `${timeObj.hour}:${timeObj.minute}`;
+    updateBookingData({ pickupTime: time });
+    // Delay navigation to ensure state is updated
+    setTimeout(() => {
+      navigate("/home", { state: { event } });
+    }, 100);
   };
 
   // Continue to home page

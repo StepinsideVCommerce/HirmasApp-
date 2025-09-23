@@ -115,6 +115,8 @@ export type Database = {
           latitude: number;
           address: string;
           name: string;
+          shift_manager_name:string;
+          shift_manager_phone:string;
         };
         Insert: {
           id?: number;
@@ -123,6 +125,8 @@ export type Database = {
           latitude: number;
           address: string;
           name: string;
+          shift_manager_name:string;
+          shift_manager_phone:string;
         };
         Update: {
           id?: number;
@@ -131,6 +135,8 @@ export type Database = {
           latitude?: number;
           address?: string;
           name?: string;
+           shift_manager_name?:string;
+          shift_manager_phone?:string;
         };
       };
       PendingRides: {

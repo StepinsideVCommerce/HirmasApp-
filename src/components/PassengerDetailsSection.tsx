@@ -1,10 +1,18 @@
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, User, Briefcase, Crown, Users } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import React, { useEffect, useMemo, useState } from 'react';
+import { User, Briefcase, Crown, Phone } from 'lucide-react';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { BookingData } from '@/hooks/useBookingFlow';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { countryDialCodes, defaultDialCode } from '@/data/countryDialCodes';
 
 interface PassengerDetailsSectionProps {
   bookingData: BookingData;
@@ -18,6 +26,37 @@ const PassengerDetailsSection = ({
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const [passengers, setPassengers] = useState(1);
+  const [localPhoneNumber, setLocalPhoneNumber] = useState('');
+
+  useEffect(() => {
+    const code = bookingData.phoneCountryCode || defaultDialCode;
+    if (bookingData.phoneNumber?.startsWith(code)) {
+      setLocalPhoneNumber(bookingData.phoneNumber.slice(code.length));
+    } else {
+      setLocalPhoneNumber(bookingData.phoneNumber || '');
+    }
+  }, [bookingData.phoneCountryCode, bookingData.phoneNumber]);
+
+  const countries = useMemo(() => {
+    return [...countryDialCodes].sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const handleCountryCodeChange = (dialCode: string) => {
+    updateBookingData({
+      phoneCountryCode: dialCode,
+      phoneNumber: localPhoneNumber ? `${dialCode}${localPhoneNumber}` : '',
+    });
+  };
+
+  const handlePhoneNumberChange = (value: string) => {
+    const normalized = value.replace(/[^0-9]/g, '');
+    setLocalPhoneNumber(normalized);
+    updateBookingData({
+      phoneNumber: normalized
+        ? `${bookingData.phoneCountryCode || defaultDialCode}${normalized}`
+        : '',
+    });
+  };
 
   const handlePassengerCountChange = (change: number) => {
     const newCount = Math.min(Math.max(1, passengers + change), 10);
@@ -51,16 +90,6 @@ const PassengerDetailsSection = ({
         onOpenChange={setIsOpen}
         className="w-full"
       >
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-4">
-          <div className="flex items-center">
-            <Users className="w-5 h-5 text-yellow-500 mr-2" />
-            <span className="text-white font-medium">Passenger Details</span>
-          </div>
-          {isOpen ? 
-            <ChevronUp className="h-5 w-5 text-yellow-500" /> : 
-            <ChevronDown className="h-5 w-5 text-yellow-500" />
-          }
-        </CollapsibleTrigger>
 
         <CollapsibleContent className="p-4 space-y-4 border-t border-slate-700 animate-accordion-down">
           <div className="flex items-center justify-between mb-6">
@@ -94,27 +123,41 @@ const PassengerDetailsSection = ({
             </div>
           </div>
           
-          <div className="mb-4">
-            <div className="relative border-b border-slate-700 focus-within:border-yellow-500 transition-colors">
-              <div className="absolute left-2 top-3 text-slate-400">🇸🇦 +966</div>
-              <Input
-                id="phoneNumber"
-                value={bookingData.phoneNumber}
-                onChange={(e) => updateBookingData({ phoneNumber: e.target.value })}
-                className="h-12 bg-transparent border-none shadow-none text-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pl-[90px]"
-                placeholder="e.g. 501234567"
-                type="tel"
-              />
-              <label 
-                htmlFor="phoneNumber" 
-                className={`absolute left-[90px] transition-all duration-200 pointer-events-none ${
-                  bookingData.phoneNumber ? 
-                  'text-xs -top-2 text-yellow-500' : 
-                  'text-slate-400 opacity-0'
-                }`}
+          <div className="mb-4 space-y-2">
+            <label className="block text-sm text-slate-400 font-medium">Phone Number</label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select
+                value={bookingData.phoneCountryCode || defaultDialCode}
+                onValueChange={handleCountryCodeChange}
               >
-                Phone Number
-              </label>
+                <SelectTrigger className="h-12 bg-slate-800 border border-slate-700 text-white text-sm rounded-lg sm:w-48">
+                  <SelectValue placeholder="Country code" />
+                </SelectTrigger>
+                <SelectContent className="max-h-80 bg-slate-900 border border-slate-700 text-white shadow-xl">
+                  {countries.map((country) => (
+                    <SelectItem
+                      key={country.isoCode}
+                      value={country.dialCode}
+                      className="text-white data-[highlighted]:bg-slate-700 data-[state=checked]:bg-slate-700 focus:bg-slate-700 focus:text-white"
+                    >
+                      {country.name} ({country.dialCode})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative flex-1">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-yellow-500" />
+                <Input
+                  id="phoneNumber"
+                  value={localPhoneNumber}
+                  onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                  className="h-12 bg-slate-800 border border-slate-700 text-white text-sm rounded-lg pl-10"
+                  placeholder="Enter phone number"
+                  type="tel"
+                  inputMode="tel"
+                />
+              </div>
             </div>
           </div>
 
