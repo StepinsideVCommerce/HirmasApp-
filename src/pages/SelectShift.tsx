@@ -18,7 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-const GOLD = "#D4AF37";
 // ---- date helpers ----
 function parseISO(d: string) {
   const [y, m, day] = d.split("-").map(Number);
@@ -270,25 +269,20 @@ const SelectShift = () => {
     <div className="space-y-6">
       {/* HERO with event info */}
       <div
-        className="rounded-2xl p-5 bg-black text-white border"
-        style={{ borderColor: GOLD }}
+        className="rounded-2xl p-5 bg-primary text-primary-foreground border border-primary"
       >
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div
-              className="h-10 w-10 rounded-xl flex items-center justify-center"
-              style={{
-                background: "white",
-                boxShadow: `0 0 6px rgba(212,175,55,0.4)`,
-              }}
+              className="h-10 w-10 rounded-xl flex items-center justify-center bg-card shadow-lg"
             >
-              <CalendarIcon className="h-6 w-6" color={GOLD} />
+              <CalendarIcon className="h-6 w-6" color="hsl(var(--primary))" />
             </div>
             <div>
               <h2 className="text-2xl font-extrabold tracking-tight">
                 Book Your Ride
               </h2>
-              <p className="text-sm" style={{ color: GOLD }}>
+              <p className="text-sm text-primary">
                 Select a day → choose a shift
               </p>
             </div>
@@ -296,26 +290,20 @@ const SelectShift = () => {
 
           {/* Selected Event info */}
           <div
-            className="rounded-xl border px-4 py-3 flex items-center gap-3"
-            style={{
-              borderColor: GOLD,
-              background: "rgba(255,255,255,0.04)",
-              boxShadow: "0 0 8px rgba(212,175,55,0.25)",
-            }}
+            className="rounded-xl border border-primary px-4 py-3 flex items-center gap-3 bg-secondary/20 shadow-lg"
           >
             <div
-              className="h-9 w-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "white", border: `1px solid ${GOLD}` }}
+              className="h-9 w-9 rounded-lg flex items-center justify-center bg-card border border-primary"
             >
-              <CalendarDays className="h-5 w-5" color={GOLD} />
+              <CalendarDays className="h-5 w-5" color="hsl(var(--primary))" />
             </div>
             <div className="leading-tight">
-              <div className="font-bold text-white">{event.name}</div>
-              <div className="flex items-center gap-2 text-xs text-neutral-300">
+              <div className="font-bold text-primary-foreground">{event.name}</div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{event.location}</span>
               </div>
-              <div className="text-xs" style={{ color: GOLD }}>
+              <div className="text-xs text-primary">
                 {event.startDate} &rarr; {event.endDate}
               </div>
             </div>
@@ -327,13 +315,12 @@ const SelectShift = () => {
       <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
         {/* CALENDAR (more compact height) */}
         <Card
-          className="border bg-white shadow-lg"
-          style={{ borderColor: "rgba(0,0,0,0.1)" }}
+          className="border border-border bg-card shadow-lg"
         >
           <CardHeader className="pb-1">
-            <CardTitle className="flex items-center justify-between text-black">
+            <CardTitle className="flex items-center justify-between text-foreground">
               <div className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" color={GOLD} />
+                <CalendarIcon className="h-5 w-5" color="hsl(var(--primary))" />
                 <span className="font-extrabold">Select a Day</span>
               </div>
               <div className="flex items-center gap-2">
@@ -342,13 +329,9 @@ const SelectShift = () => {
                   size="icon"
                   onClick={goPrevMonth}
                   disabled={!canPrev}
-                  className={`h-8 w-8 rounded-lg ${
+                  className={`h-8 w-8 rounded-lg text-primary border border-primary ${
                     !canPrev ? "opacity-40 cursor-not-allowed" : ""
                   }`}
-                  style={{
-                    color: canPrev ? GOLD : "inherit",
-                    border: `1px solid ${canPrev ? GOLD : "transparent"}`,
-                  }}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -363,19 +346,15 @@ const SelectShift = () => {
                   size="icon"
                   onClick={goNextMonth}
                   disabled={!canNext}
-                  className={`h-8 w-8 rounded-lg ${
+                  className={`h-8 w-8 rounded-lg text-primary border border-primary ${
                     !canNext ? "opacity-40 cursor-not-allowed" : ""
                   }`}
-                  style={{
-                    color: canNext ? GOLD : "inherit",
-                    border: `1px solid ${canNext ? GOLD : "transparent"}`,
-                  }}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </CardTitle>
-            <p className="text-[11px] text-neutral-600">
+            <p className="text-[11px] text-muted-foreground">
               Event window:{" "}
               <span className="font-semibold">{event.startDate}</span> →{" "}
               <span className="font-semibold">{event.endDate}</span>
@@ -384,7 +363,7 @@ const SelectShift = () => {
 
           <CardContent className="pt-0">
             {/* Weekday headers tighter */}
-            <div className="grid grid-cols-7 text-[11px] sm:text-xs text-neutral-500 mb-1">
+            <div className="grid grid-cols-7 text-[11px] sm:text-xs text-muted-foreground mb-1">
               {WEEKDAYS.map((d) => (
                 <div key={d} className="py-0.5 text-center leading-none">
                   {d}
@@ -422,27 +401,13 @@ const SelectShift = () => {
                     onClick={() => isSelectable && handleDateSelect(day)}
                     className={`relative w-full h-17 sm:h-18 md:h-19 lg:h-20 rounded-md flex items-center justify-center text-[12px] border transition-all ${opacityClass} ${
                       isSelectable ? "cursor-pointer" : "cursor-not-allowed"
+                    } ${
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground shadow-lg"
+                        : goldDay
+                        ? "border-primary bg-primary/20 text-primary shadow-md hover:shadow-lg font-bold"
+                        : "border-border bg-card text-foreground"
                     }`}
-                    style={{
-                      borderColor: selected
-                        ? GOLD
-                        : goldDay
-                        ? GOLD
-                        : "rgba(0,0,0,0.15)",
-                      background: selected
-                        ? "black"
-                        : goldDay
-                        ? "rgba(212,175,55,0.18)"
-                        : "white",
-                      color: selected ? "white" : goldDay ? GOLD : "black",
-                      boxShadow:
-                        goldDay && !selected
-                          ? "0 0 12px rgba(212,175,55,0.7)"
-                          : selected
-                          ? "0 0 10px rgba(212,175,55,0.55)"
-                          : "none",
-                      fontWeight: goldDay ? 700 : 400,
-                    }}
                     title={
                       isSelectable
                         ? hasShifts
@@ -454,8 +419,7 @@ const SelectShift = () => {
                     <span className="leading-none">{day.getDate()}</span>
                     {goldDay && !selected && (
                       <span
-                        className="absolute bottom-1 h-2 w-2 rounded-full"
-                        style={{ backgroundColor: GOLD }}
+                        className="absolute bottom-1 h-2 w-2 rounded-full bg-primary"
                       />
                     )}
                   </button>
@@ -468,15 +432,14 @@ const SelectShift = () => {
         {/* SHIFTS — visible only after a day is selected */}
         {selectedDate && (
           <Card
-            className="border bg-white shadow-xl"
-            style={{ borderColor: "rgba(0,0,0,0.1)" }}
+            className="border border-border bg-card shadow-xl"
           >
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-black">
-                <Clock className="h-5 w-5" color={GOLD} />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Clock className="h-5 w-5" color="hsl(var(--primary))" />
                 <span className="font-extrabold">Available Shifts</span>
               </CardTitle>
-              <p className="text-xs text-neutral-600">
+              <p className="text-xs text-muted-foreground">
                 {parseISO(selectedDate).toLocaleDateString(undefined, {
                   weekday: "long",
                   year: "numeric",
@@ -491,7 +454,7 @@ const SelectShift = () => {
                 const shifts = shiftsByDate[key] || [];
                 if (shifts.length === 0) {
                   return (
-                    <div className="text-sm text-neutral-600">
+                    <div className="text-sm text-muted-foreground">
                       No shifts on this day.
                     </div>
                   );
@@ -545,22 +508,20 @@ const SelectShift = () => {
                       return (
                         <div
                           key={i}
-                          className="flex items-center justify-between rounded-xl border p-3 bg-white"
-                          style={{
-                            borderColor: disabled ? "rgba(0,0,0,0.12)" : GOLD,
-                            boxShadow: disabled
-                              ? "none"
-                              : "0 0 6px rgba(212,175,55,0.25)",
-                          }}
+                          className={`flex items-center justify-between rounded-xl border p-3 bg-card shadow-md ${
+                            disabled 
+                              ? "border-border opacity-50" 
+                              : "border-primary shadow-lg"
+                          }`}
                         >
                           <div>
-                            <div className="font-semibold text-black">
+                            <div className="font-semibold text-foreground">
                               {s.name}
                             </div>
-                            <div className="text-sm text-neutral-700">
+                            <div className="text-sm text-secondary-foreground">
                               {startTime} – {endTime}
                             </div>
-                            <div className="text-xs" style={{ color: GOLD }}>
+                            <div className="text-xs text-primary">
                               Available Cars: {s.availableCars}
                             </div>
                           </div>
@@ -568,13 +529,11 @@ const SelectShift = () => {
                           {active ? (
                             <>
                               <hr
-                                className="my-3"
-                                style={{ borderColor: GOLD, opacity: 0.18 }}
+                                className="my-3 border-primary/20"
                               />
                               <div className="pt-3">
                                 <div
-                                  className="text-xs font-semibold mb-2"
-                                  style={{ color: GOLD }}
+                                  className="text-xs font-semibold mb-2 text-primary"
                                 >
                                   Select time
                                 </div>
@@ -582,11 +541,11 @@ const SelectShift = () => {
                                 <div className="grid grid-cols-3 gap-2 items-end">
                                   {/* Hour */}
                                   <div className="col-span-1">
-                                    <div className="text-xs text-neutral-600 mb-1">
+                                    <div className="text-xs text-muted-foreground mb-1">
                                       Hour
                                     </div>
                                     <select
-                                      className="h-9 w-full rounded border px-2"
+                                      className="h-9 w-full rounded border border-border bg-background text-foreground px-2"
                                       value={selectedTime?.hour ?? ""}
                                       onChange={(e) => {
                                         const v = e.target.value;
@@ -613,11 +572,11 @@ const SelectShift = () => {
 
                                   {/* Minute */}
                                   <div className="col-span-1">
-                                    <div className="text-xs text-neutral-600 mb-1">
+                                    <div className="text-xs text-muted-foreground mb-1">
                                       Minute
                                     </div>
                                     <select
-                                      className="h-9 w-full rounded border px-2"
+                                      className="h-9 w-full rounded border border-border bg-background text-foreground px-2"
                                       disabled={!selectedTime?.hour}
                                       value={selectedTime?.minute ?? ""}
                                       onChange={(e) =>
@@ -654,21 +613,7 @@ const SelectShift = () => {
                                   {/* Confirm button */}
                                   <div className="col-span-1">
                                     <Button
-                                      className="w-full h-9 rounded-lg transition-all duration-300"
-                                      style={{
-                                        background: "#000",
-                                        color: GOLD,
-                                        border: `1px solid ${GOLD}`,
-                                        boxShadow: "0 0 0 rgba(212,175,55,0)",
-                                      }}
-                                      onMouseEnter={(e) =>
-                                        (e.currentTarget.style.boxShadow =
-                                          "0 0 10px rgba(212,175,55,0.45)")
-                                      }
-                                      onMouseLeave={(e) =>
-                                        (e.currentTarget.style.boxShadow =
-                                          "0 0 0 rgba(212,175,55,0)")
-                                      }
+                                      className="w-full h-9 rounded-lg transition-all duration-300 bg-primary text-primary-foreground border border-primary hover:shadow-lg hover:shadow-primary/20"
                                       disabled={
                                         !selectedTime?.hour ||
                                         !selectedTime?.minute
@@ -687,20 +632,11 @@ const SelectShift = () => {
                           ) : (
                             <Button
                               disabled={disabled}
-                              className={`rounded-lg px-4 h-9 transition-all duration-300 ${
+                              className={`rounded-lg px-4 h-9 transition-all duration-300 bg-card text-primary border border-primary hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] hover:-translate-y-0.5 ${
                                 disabled
                                   ? "opacity-50 cursor-not-allowed"
-                                  : "bg-white hover:scale-[1.02] hover:-translate-y-0.5"
+                                  : ""
                               }`}
-                              style={{
-                                color: disabled ? undefined : GOLD,
-                                border: `1px solid ${
-                                  disabled ? "rgba(0,0,0,0.12)" : GOLD
-                                }`,
-                                boxShadow: disabled
-                                  ? "none"
-                                  : "0 0 6px rgba(212,175,55,0.35)",
-                              }}
                               onClick={() => handleShiftSelect(s)}
                             >
                               Select
