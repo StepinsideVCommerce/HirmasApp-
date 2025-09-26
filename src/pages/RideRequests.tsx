@@ -274,25 +274,25 @@ export function TripTracking() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6 bg-white text-black font-sans antialiased">
+    <div className="space-y-6 bg-background text-foreground font-sans antialiased">
       {/* HERO */}
-      <div className="rounded-2xl border border-neutral-200 bg-white pt-0 pr-6 pb-4 pl-6 shadow-xl">
+      <div className="rounded-2xl border border-border bg-card pt-0 pr-6 pb-4 pl-6 shadow-xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           {/* Left: title & icon inline */}
           <div className="flex items-center">
             <div className="flex items-center gap-4">
-              <div className="bg-black text-[${GOLD}] p-3 rounded-lg -mt-1">
+              <div className="bg-primary text-primary-foreground p-3 rounded-lg -mt-1">
                 <RouteIcon
                   className="h-10 w-10"
                   aria-hidden="true"
-                  color={GOLD}
+                  color="hsl(var(--primary-foreground))"
                 />
               </div>
               <div>
-                <h2 className="relative text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight inline-block text-black">
+                <h2 className="relative text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight inline-block text-foreground">
                   <span className="shimmer-text">Trip Tracking Log</span>
                 </h2>
-                <p className="text-neutral-600 mt-2 text-base">
+                <p className="text-muted-foreground mt-2 text-base">
                   Keep tabs on rides in a clean, minimal view.
                 </p>
               </div>
@@ -301,7 +301,7 @@ export function TripTracking() {
 
           {/* Right: image with button below */}
           <div className="flex flex-col h-full">
-            <div className="relative flex-1 w-full overflow-hidden rounded-2xl border border-neutral-200 mt-2 shadow-lg">
+            <div className="relative flex-1 w-full overflow-hidden rounded-2xl border border-border mt-2 shadow-lg">
               <img
                 src={bookRide}
                 alt="Rides preview"
@@ -309,7 +309,7 @@ export function TripTracking() {
               />
             </div>
             <Button
-              className="mt-2 bg-black text-[#D4AF37]  h-11 rounded-xl font-semibold transition-all duration-300 hover:shadow-[0_0_6px_#D4AF37] hover:scale-105"
+              className="mt-2 bg-primary text-primary-foreground h-11 rounded-xl font-semibold transition-all duration-300 hover:shadow-[0_0_6px_hsl(var(--primary))] hover:scale-105"
               onClick={() => navigate("/select-shift")}
             >
               Book a ride
@@ -328,7 +328,7 @@ export function TripTracking() {
             }
           }
           .shimmer-text {
-            background: linear-gradient(90deg, #000 25%, ${GOLD} 50%, #000 75%);
+            background: linear-gradient(90deg, hsl(var(--foreground)) 25%, hsl(var(--primary)) 50%, hsl(var(--foreground)) 75%);
             background-size: 200% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -345,17 +345,17 @@ export function TripTracking() {
           return (
             <Card
               key={status}
-              className="border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-transform duration-200 hover:-translate-y-0.5"
+              className="border border-border bg-card shadow-sm hover:shadow-md transition-transform duration-200 hover:-translate-y-0.5"
             >
               <Card className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{Icon}</span>
-                    <span className="text-base font-semibold text-black">
+                    <span className="text-base font-semibold text-foreground">
                       {meta.label}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold text-[#D4AF37]">
+                  <div className="text-2xl font-bold text-primary">
                     {statusCounts[status]}
                   </div>
                 </div>
@@ -366,20 +366,19 @@ export function TripTracking() {
       </div>
 
       {/* ACTIVE TRIPS */}
-      <Card className="border border-neutral-200 bg-white shadow-sm">
+      <Card className="border border-border bg-card shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-3">
-            <div className="bg-black p-2 rounded-xl">
-              <Car className="h-6 w-6" color={GOLD} />
+            <div className="bg-primary p-2 rounded-xl">
+              <Car className="h-6 w-6" color="hsl(var(--primary-foreground))" />
             </div>
             <div>
               <CardTitle
-                className="text-4xl font-extrabold tracking-tight"
-                style={{ color: "black" }}
+                className="text-4xl font-extrabold tracking-tight text-foreground"
               >
                 Active trips
               </CardTitle>
-              <p className="text-sm text-neutral-500 -mt-0.5">
+              <p className="text-sm text-muted-foreground -mt-0.5">
                 Tap a trip for details, support, or follow-up.
               </p>
             </div>
@@ -394,23 +393,22 @@ export function TripTracking() {
               return (
                 <div
                   key={trip.id}
-                  className="group p-5 bg-white border border-neutral-200 rounded-xl shadow-sm transition-transform duration-300 ease-out hover:scale-[1.015] hover:shadow-xl"
+                  className="group p-5 bg-card border border-border rounded-xl shadow-sm transition-transform duration-300 ease-out hover:scale-[1.015] hover:shadow-xl"
                 >
                   {/* Client box */}
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
-                    <div className="bg-neutral-100 border border-neutral-200 rounded-2xl px-4 py-2">
+                    <div className="bg-secondary border border-border rounded-2xl px-4 py-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className="text-[11px] uppercase tracking-wide font-semibold"
-                          style={{ color: GOLD }}
+                          className="text-[11px] uppercase tracking-wide font-semibold text-primary"
                         >
                           Client
                         </span>
-                        <span className="text-lg font-bold leading-tight">
+                        <span className="text-lg font-bold leading-tight text-foreground">
                           {trip.name}
                         </span>
-                        <span className="text-neutral-300">•</span>
-                        <span className="text-base text-neutral-700 leading-tight">
+                        <span className="text-muted-foreground">•</span>
+                        <span className="text-base text-secondary-foreground leading-tight">
                           {trip.clientPhone}
                         </span>
                       </div>
@@ -418,64 +416,64 @@ export function TripTracking() {
 
                     <div className="flex items-center gap-3">
                       {/* Date chip */}
-                      <div className="inline-flex items-center gap-1.5 text-sm text-neutral-700 bg-neutral-100 border border-neutral-200 rounded-md px-2.5 py-1.5 font-normal">
-                        <CalendarDays className="h-4 w-4" color={GOLD} />
+                      <div className="inline-flex items-center gap-1.5 text-sm text-secondary-foreground bg-secondary border border-border rounded-md px-2.5 py-1.5 font-normal">
+                        <CalendarDays className="h-4 w-4" color="hsl(var(--primary))" />
                         <span>{trip.dateTime}</span>
                       </div>
 
                       {/* Status chip */}
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-neutral-300 font-extrabold">
-                        <span className="text-neutral-800">{meta.label}</span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border border-border font-extrabold">
+                        <span className="text-foreground">{meta.label}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Route */}
                   <div className="flex flex-col md:flex-row md:items-stretch gap-3 mb-3">
-                    <div className="flex-1 border border-neutral-200 rounded-lg p-3 bg-neutral-50">
-                      <div className="flex items-center gap-2 text-neutral-900 text-base">
-                        <MapPin className="h-4 w-4" color={GOLD} />
+                    <div className="flex-1 border border-border rounded-lg p-3 bg-muted">
+                      <div className="flex items-center gap-2 text-foreground text-base">
+                        <MapPin className="h-4 w-4" color="hsl(var(--primary))" />
                         <span className="font-semibold">Pickup</span>
                       </div>
-                      <p className="text-sm text-neutral-700 mt-1">
+                      <p className="text-sm text-secondary-foreground mt-1">
                         {trip.location}
                       </p>
-                      <div className="flex items-center gap-1 text-xs text-neutral-700 mt-1">
+                      <div className="flex items-center gap-1 text-xs text-secondary-foreground mt-1">
                         <Clock className="h-3.5 w-3.5" />
                         <span className="font-medium">Pickup time:</span>
                         <span>{trip.pickupTime}</span>
                       </div>
                     </div>
                     <div className="hidden md:flex items-center justify-center px-1">
-                      <ArrowRight className="h-5 w-5" color={GOLD} />
+                      <ArrowRight className="h-5 w-5" color="hsl(var(--primary))" />
                     </div>
-                    <div className="flex-1 border border-neutral-200 rounded-lg p-3 bg-neutral-50">
-                      <div className="flex items-center gap-2 text-neutral-900 text-base">
-                        <MapPin className="h-4 w-4" color={GOLD} />
+                    <div className="flex-1 border border-border rounded-lg p-3 bg-muted">
+                      <div className="flex items-center gap-2 text-foreground text-base">
+                        <MapPin className="h-4 w-4" color="hsl(var(--primary))" />
                         <span className="font-semibold">Destination</span>
                       </div>
-                      <p className="text-sm text-neutral-700 mt-1">
+                      <p className="text-sm text-secondary-foreground mt-1">
                         {trip.destination}
                       </p>
                     </div>
                   </div>
 
                   {/* Driver */}
-                  <div className="flex items-center gap-2 text-base text-neutral-900">
-                    <User className="h-5 w-5" color={GOLD} />
+                  <div className="flex items-center gap-2 text-base text-foreground">
+                    <User className="h-5 w-5" color="hsl(var(--primary))" />
                     <span className="font-semibold">{trip.driverName}</span>
-                    <span className="text-neutral-400 text-sm">
+                    <span className="text-muted-foreground text-sm">
                       ({trip.driverNumber})
                     </span>
-                    <span className="text-neutral-300">•</span>
-                    <Phone className="h-5 w-5" color={GOLD} />
+                    <span className="text-muted-foreground">•</span>
+                    <Phone className="h-5 w-5" color="hsl(var(--primary))" />
                     <a href={`tel:${trip.clientPhone}`} className="underline">
                       {trip.clientPhone}
                     </a>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between text-neutral-500 text-xs mt-3">
+                  <div className="flex items-center justify-between text-muted-foreground text-xs mt-3">
                     <div className="flex items-center gap-1">
                       <Hash className="h-3 w-3" />
                       <span className="font-medium">Trip ID:</span>
@@ -483,7 +481,7 @@ export function TripTracking() {
                     </div>
                     <Button
                       size="sm"
-                      className="h-9 px-4 bg-black text-[#D4AF37]  text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-[0_0_6px_#D4AF37] hover:scale-105 "
+                      className="h-9 px-4 bg-primary text-primary-foreground text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-[0_0_6px_hsl(var(--primary))] hover:scale-105"
                       onClick={() => setDetailsRide(trip)}
                     >
                       More details
@@ -498,11 +496,10 @@ export function TripTracking() {
 
       {detailsRide && (
         <Dialog open={true} onOpenChange={() => setDetailsRide(null)}>
-          <DialogContent className="max-w-md bg-white text-black border border-neutral-200 rounded-2xl shadow-xl">
-            <DialogHeader className="border-b border-neutral-200 pb-3 mb-3">
+          <DialogContent className="max-w-md bg-card text-foreground border border-border rounded-2xl shadow-xl">
+            <DialogHeader className="border-b border-border pb-3 mb-3">
               <DialogTitle
-                className="text-3xl font-extrabold tracking-tight"
-                style={{ color: "black" }}
+                className="text-3xl font-extrabold tracking-tight text-foreground"
               >
                 Trip details
               </DialogTitle>
@@ -511,11 +508,11 @@ export function TripTracking() {
             <div className="space-y-4 text-base">
               {/* Date & Status */}
               <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-2 text-base text-neutral-700 bg-neutral-100 border border-neutral-200 rounded-lg px-3 py-1.5">
-                  <CalendarDays className="h-4 w-4" color={GOLD} />
+                <div className="inline-flex items-center gap-2 text-base text-secondary-foreground bg-secondary border border-border rounded-lg px-3 py-1.5">
+                  <CalendarDays className="h-4 w-4" color="hsl(var(--primary))" />
                   <span>{detailsRide.dateTime}</span>
                 </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-neutral-300 text-base font-medium">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border text-base font-medium">
                   {(() => {
                     const Icon = getStatusConfig(detailsRide.status).icon;
                     return <span className="text-2xl">{Icon}</span>;
@@ -525,37 +522,35 @@ export function TripTracking() {
               </div>
 
               {/* Client */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+              <div className="bg-muted border border-border rounded-xl p-3">
                 <p
-                  className="text-xs uppercase tracking-wide mb-1"
-                  style={{ color: GOLD }}
+                  className="text-xs uppercase tracking-wide mb-1 text-primary"
                 >
                   Client
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-lg font-bold">{detailsRide.name}</span>
-                  <span className="text-neutral-300">•</span>
-                  <span className="text-base text-neutral-700">
+                  <span className="text-lg font-bold text-foreground">{detailsRide.name}</span>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-base text-secondary-foreground">
                     {detailsRide.clientPhone}
                   </span>
                 </div>
               </div>
 
               {/* Driver */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+              <div className="bg-muted border border-border rounded-xl p-3">
                 <p
-                  className="text-xs uppercase tracking-wide mb-1"
-                  style={{ color: GOLD }}
+                  className="text-xs uppercase tracking-wide mb-1 text-primary"
                 >
                   Driver
                 </p>
-                <div className="flex items-center gap-2 text-base text-neutral-900">
-                  <User className="h-4 w-4" color={GOLD} />
+                <div className="flex items-center gap-2 text-base text-foreground">
+                  <User className="h-4 w-4" color="hsl(var(--primary))" />
                   <span className="font-semibold">
                     {detailsRide.driverName} ({detailsRide.driverNumber})
                   </span>
-                  <span className="text-neutral-300">•</span>
-                  <Phone className="h-4 w-4" color={GOLD} />
+                  <span className="text-muted-foreground">•</span>
+                  <Phone className="h-4 w-4" color="hsl(var(--primary))" />
                   <a
                     href={`tel:${detailsRide.clientPhone}`}
                     className="underline"
@@ -566,15 +561,14 @@ export function TripTracking() {
               </div>
 
               {/* Vehicle */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
+              <div className="bg-muted border border-border rounded-xl p-3">
                 <p
-                  className="text-xs uppercase tracking-wide mb-1"
-                  style={{ color: GOLD }}
+                  className="text-xs uppercase tracking-wide mb-1 text-primary"
                 >
                   Vehicle
                 </p>
-                <div className="flex items-center gap-2 text-base text-neutral-900 font-medium">
-                  <Car className="h-4 w-4" color={GOLD} />
+                <div className="flex items-center gap-2 text-base text-foreground font-medium">
+                  <Car className="h-4 w-4" color="hsl(var(--primary))" />
                   <span>
                     {detailsRide.carModel} ({detailsRide.carId}) • Plate:{" "}
                     {detailsRide.carNumber}
@@ -583,24 +577,23 @@ export function TripTracking() {
               </div>
 
               {/* Time info */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 space-y-1">
+              <div className="bg-muted border border-border rounded-xl p-3 space-y-1">
                 <p
-                  className="text-xs uppercase tracking-wide"
-                  style={{ color: GOLD }}
+                  className="text-xs uppercase tracking-wide text-primary"
                 >
                   Timing
                 </p>
-                <p className="text-base font-medium text-neutral-900">
+                <p className="text-base font-medium text-foreground">
                   Arrival time: {detailsRide.pickupTime}
                 </p>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between text-sm text-neutral-500 pt-2 border-t border-neutral-200">
+              <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t border-border">
                 <span>Trip ID: {detailsRide.id}</span>
                 <Button
                   size="sm"
-                  className="h-9 bg-black text-[#D4AF37] hover:bg-[${GOLD}] hover:text-black transition-colors text-sm font-medium"
+                  className="h-9 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
                   onClick={() => setDetailsRide(null)}
                 >
                   Close
