@@ -399,22 +399,15 @@ const SelectShift = () => {
                     key={idx}
                     disabled={!isSelectable}
                     onClick={() => isSelectable && handleDateSelect(day)}
-                    className={`relative w-full h-17 sm:h-18 md:h-19 lg:h-20 rounded-md flex items-center justify-center text-[12px] border transition-all duration-300 ${opacityClass} ${
+                    className={`relative w-full h-17 sm:h-18 md:h-19 lg:h-20 rounded-md flex items-center justify-center text-[12px] border transition-all ${opacityClass} ${
                       isSelectable ? "cursor-pointer" : "cursor-not-allowed"
                     } ${
                       selected
-                        ? "border-primary bg-primary text-primary-foreground shadow-lg animate-pulse"
+                        ? "border-primary bg-primary text-primary-foreground shadow-lg"
                         : goldDay
-                        ? "border-primary bg-primary/30 text-primary shadow-2xl hover:shadow-primary/40 hover:shadow-2xl font-bold animate-pulse hover:bg-primary/40"
-                        : "border-border bg-card text-foreground hover:bg-muted"
+                        ? "border-primary bg-primary/20 text-primary shadow-md hover:shadow-lg font-bold"
+                        : "border-border bg-card text-foreground"
                     }`}
-                    style={{
-                      boxShadow: goldDay && !selected 
-                        ? "0 0 20px hsl(var(--primary) / 0.6), 0 0 40px hsl(var(--primary) / 0.3), inset 0 1px 0 hsl(var(--primary) / 0.2)"
-                        : selected
-                        ? "0 0 25px hsl(var(--primary) / 0.8), 0 0 50px hsl(var(--primary) / 0.4)"
-                        : undefined
-                    }}
                     title={
                       isSelectable
                         ? hasShifts
@@ -423,13 +416,11 @@ const SelectShift = () => {
                         : "Out of range"
                     }
                   >
-                    <span className="leading-none relative z-10">{day.getDate()}</span>
+                    <span className="leading-none">{day.getDate()}</span>
                     {goldDay && !selected && (
-                      <>
-                        <span className="absolute bottom-1 h-2 w-2 rounded-full bg-primary animate-ping" />
-                        <span className="absolute bottom-1 h-2 w-2 rounded-full bg-primary" />
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/10 rounded-md pointer-events-none" />
-                      </>
+                      <span
+                        className="absolute bottom-1 h-2 w-2 rounded-full bg-primary"
+                      />
                     )}
                   </button>
                 );
