@@ -160,6 +160,7 @@ export type Database = {
           dropoffLng?: number | null;
           pickup_note?: string | null;
           dropoff_note?: string | null;
+          created_at?: string;
         };
         Insert: {
           id?: number;
@@ -181,6 +182,7 @@ export type Database = {
           dropoffLng?: number | null;
           pickup_note?: string | null;
           dropoff_note?: string | null;
+          created_at?: string;
         };
         Update: {
           id?: number;
@@ -202,6 +204,7 @@ export type Database = {
           dropoffLng?: number | null;
           pickup_note?: string | null;
           dropoff_note?: string | null;
+          created_at?: string;
         };
       };
       ShiftManagers: {

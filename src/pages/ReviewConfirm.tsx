@@ -13,7 +13,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBookingFlow } from "@/hooks/useBookingFlow";
-
+const getLocalTimestamp = () => {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+    now.getDate()
+  )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(
+    now.getSeconds()
+  )}`;
+};
 const ReviewConfirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,6 +59,7 @@ const ReviewConfirm = () => {
             dropoffLng: bookingData.dropoffLng,
             pickup_note: bookingData.pickupNote,
             dropoff_note: bookingData.dropoffNote,
+            created_at: getLocalTimestamp(),
           },
         ])
         .select();
